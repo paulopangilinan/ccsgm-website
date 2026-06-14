@@ -219,7 +219,7 @@ export const postType = defineType({
           ],
           preview: {
             select: { url: "url", caption: "caption" },
-            prepare({ url, caption }: { url: string; caption?: string }) {
+            prepare({ url, caption }) {
               return { title: caption || "YouTube Video", subtitle: url };
             },
           },
