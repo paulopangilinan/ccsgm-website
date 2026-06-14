@@ -136,9 +136,6 @@ const portableTextComponents: PortableTextComponents = {
       if (images.length === 0) return null;
       return <GalleryLightbox images={images} />;
     },
-    youtubePlaylist: ({ value }: { value: { playlistId: string; maxVideos?: number } }) => (
-      <PlaylistBlock videos={playlistMap[value.playlistId] ?? []} playlistId={value.playlistId} />
-    ),
     carousel: ({ value }: { value: { images: Array<SanityImage & { caption?: string }> } }) => {
       const images = (value.images ?? []).map((img) => ({
         url: urlFor(img).width(900).fit("max").auto("format").url(),
