@@ -3,6 +3,8 @@
 import { useState } from "react";
 import Image from "next/image";
 
+const DEFAULT_HERO_IMAGE = "/images/hero-headers/default.png";
+
 type HeroSectionProps = {
   eyebrow?: string;
   title: React.ReactNode;
@@ -20,10 +22,14 @@ export default function HeroSection({
   imageUrl,
   children,
 }: HeroSectionProps) {
-  const [imageError, setImageError] = useState(false);
-  const imageSrc = imageUrl ?? (imageName ? `/images/hero-headers/${imageName}.png` : null);
+  const [failedImageSrcs, setFailedImageSrcs] = useState<string[]>([]);
+  const primaryImageSrc =
+    imageUrl ?? (imageName ? `/images/hero-headers/${imageName}.png` : DEFAULT_HERO_IMAGE);
+  const imageSrc = failedImageSrcs.includes(primaryImageSrc)
+    ? DEFAULT_HERO_IMAGE
+    : primaryImageSrc;
 
-  const hasImage = !!imageSrc && !imageError;
+  const hasImage = !!imageSrc && !failedImageSrcs.includes(imageSrc);
 
   return (
     <section className="relative bg-[#1a4731] text-white overflow-hidden min-h-[420px]">
@@ -32,11 +38,16 @@ export default function HeroSection({
         <>
           <div className="absolute top-0 right-0 h-full w-3/4">
             <Image
-              src={imageSrc!}
+              key={imageSrc}
+              src={imageSrc}
               alt=""
               fill
               className="object-cover object-center"
-              onError={() => setImageError(true)}
+              onError={() => {
+                setFailedImageSrcs((srcs) =>
+                  srcs.includes(imageSrc) ? srcs : [...srcs, imageSrc]
+                );
+              }}
               priority
             />
           </div>
