@@ -148,10 +148,26 @@ export default function FeaturedCarousel({ posts }: { posts: FeaturedPost[] }) {
   const post = slide.post;
   return (
     <section className="bg-[#1a4731] text-white overflow-hidden" style={{ minHeight: "450px" }}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row md:items-stretch gap-6 py-10 md:py-0 md:h-[520px]">
+      <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 flex flex-col md:flex-row md:items-stretch gap-4 md:gap-6 py-1 md:py-0 md:h-[520px]">
+
+        {/* Mobile image */}
+        {post.mainImageUrl && (
+          <div className="md:hidden flex items-center justify-center">
+            <div className="relative w-full overflow-hidden" style={{ height: "220px" }}>
+              <Image
+                src={post.mainImageUrl}
+                alt={post.title}
+                fill
+                className="object-cover object-center"
+                sizes="100vw"
+                priority
+              />
+            </div>
+          </div>
+        )}
 
         {/* Text column */}
-        <div className="flex-1 md:max-w-sm lg:max-w-md flex flex-col md:py-10">
+        <div className="featured-carousel-details flex-1 max-w-none md:max-w-sm lg:max-w-md flex flex-col px-4 pt-0 pb-4 md:px-0 md:py-10">
           <div className="flex items-center gap-3 mb-3 md:mb-4">
             <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${CATEGORY_COLOURS[post.category] ?? "bg-gray-100 text-gray-600"}`}>
               {post.category}
@@ -173,16 +189,23 @@ export default function FeaturedCarousel({ posts }: { posts: FeaturedPost[] }) {
           <Link href={`/blog/${post.slug.current}?from=home`} className="inline-flex items-center gap-1 text-sm font-semibold text-[#52b788] hover:underline mb-4 md:mb-6">
             Read more <ChevronRight size={15} />
           </Link>
-          <div className="mt-auto">
+          <div>
             <Controls slides={slides} current={current} setCurrent={setCurrent} prev={prev} next={next} />
           </div>
         </div>
 
-        {/* Image column */}
+        {/* Desktop image */}
         {post.mainImageUrl && (
-          <div className="flex-1 flex items-center justify-center md:py-10">
+          <div className="hidden md:flex flex-1 items-center justify-center py-10">
             <div className="relative w-full rounded-xl overflow-hidden" style={{ height: "380px" }}>
-              <Image src={post.mainImageUrl} alt={post.title} fill className="object-cover object-center" priority />
+              <Image
+                src={post.mainImageUrl}
+                alt={post.title}
+                fill
+                className="object-cover object-center"
+                sizes="50vw"
+                priority
+              />
             </div>
           </div>
         )}

@@ -109,10 +109,10 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16">
 
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 group">
-            <Image src="/images/ccsgm-logo.png" alt="CCSGM Logo" width={36} height={36} className="rounded-full" />
-            <div className="leading-tight">
-              <span className="block text-sm font-bold text-[#1a4731] tracking-wide">
+          <Link href="/" className="flex min-w-0 flex-1 items-center gap-2 group md:flex-none">
+            <Image src="/images/ccsgm-logo.png" alt="CCSGM Logo" width={36} height={36} className="shrink-0 rounded-full" />
+            <div className="min-w-0 leading-tight">
+              <span className="block max-w-[270px] text-sm font-bold leading-snug text-[#1a4731] tracking-wide sm:max-w-none">
                 Cross of Christ Salvation Gospel Ministries (CCSGM)
               </span>
               <span className="hidden sm:block text-[10px] text-gray-400 tracking-wider uppercase">
@@ -213,7 +213,7 @@ export default function Navbar() {
           </div>
 
           {/* Mobile menu button */}
-          <button className="md:hidden p-2 rounded-md text-gray-600 hover:text-[#1a4731]" onClick={() => setOpen(!open)} aria-label="Toggle menu">
+          <button className="md:hidden flex h-11 w-11 shrink-0 items-center justify-center rounded-md text-gray-600 hover:text-[#1a4731]" onClick={() => setOpen(!open)} aria-label="Toggle menu">
             {open ? <X size={22} /> : <Menu size={22} />}
           </button>
         </div>
@@ -221,8 +221,14 @@ export default function Navbar() {
 
       {/* Mobile menu */}
       {open && (
-        <div className="md:hidden border-t border-gray-100 bg-white px-4 pb-4">
+        <div className="md:hidden border-t border-gray-100 bg-white px-4 pb-4 shadow-sm">
           <nav className="flex flex-col gap-1 mt-2">
+            <Link href="/about" onClick={() => setOpen(false)} className="py-2 text-sm font-medium text-gray-700 hover:text-[#1a4731] transition-colors">
+              Who We Are
+            </Link>
+
+            <div className="border-t border-gray-100 mt-2 pt-2" />
+
             {/* Preaching */}
             <p className="text-[10px] uppercase tracking-widest text-gray-400 font-semibold mt-2 mb-1 px-1">Preaching</p>
             {preachingLinks.map((l) => (
@@ -278,15 +284,12 @@ export default function Navbar() {
             )}
 
             <div className="border-t border-gray-100 mt-2 pt-2" />
-            <Link href="/about" onClick={() => setOpen(false)} className="py-2 text-sm font-medium text-gray-700 hover:text-[#1a4731] transition-colors">
-              Who We Are
-            </Link>
             {links.map((l) => (
               <Link key={l.href} href={l.href} onClick={() => setOpen(false)} className="py-2 text-sm font-medium text-gray-700 hover:text-[#1a4731] transition-colors">
                 {l.label}
               </Link>
             ))}
-            <Link href="/give" onClick={() => setOpen(false)} className="mt-2 inline-flex items-center justify-center px-4 py-2 rounded-full bg-[#52b788] text-white text-sm font-semibold hover:bg-[#3d9971] transition-colors">
+            <Link href="/give" onClick={() => setOpen(false)} className="mt-2 inline-flex items-center justify-center px-4 py-2.5 rounded-full bg-[#52b788] text-white text-sm font-semibold hover:bg-[#3d9971] transition-colors">
               Give
             </Link>
           </nav>

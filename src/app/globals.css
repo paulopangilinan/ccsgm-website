@@ -22,3 +22,10 @@ body {
   color: #1f2937;
   background: #ffffff;
 }
+
+@media (min-width: 768px) {
+  .featured-carousel-details {
+    height: 520px;
+    justify-content: center;
+  }
+}
