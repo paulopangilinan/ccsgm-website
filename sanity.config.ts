@@ -14,12 +14,17 @@ const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET || 'production'
 const apiVersion = process.env.NEXT_PUBLIC_SANITY_API_VERSION || '2026-06-02'
 import {schema} from './src/sanity/schemaTypes'
 import {structure} from './src/sanity/structure'
+import {templates} from './src/sanity/templates'
+import WpMigrationTool from './src/sanity/tools/WpMigrationTool'
 
 export default defineConfig({
   basePath: '/studio',
   projectId,
   dataset,
-  schema,
+  schema: {
+    ...schema,
+    templates,
+  },
   document: {
     comments: {
       enabled: false,
@@ -28,5 +33,12 @@ export default defineConfig({
   plugins: [
     structureTool({structure}),
     visionTool({defaultApiVersion: apiVersion}),
+  ],
+  tools: [
+    {
+      name: 'wp-migration',
+      title: 'WP Migration',
+      component: WpMigrationTool,
+    },
   ],
 })

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { PlayCircle, ExternalLink } from "lucide-react";
-import { getChannelVideos, type YouTubeVideo } from "@/lib/youtube";
+import { getChannelVideos, getPlaylistVideos, type YouTubeVideo } from "@/lib/youtube";
+import { client } from "@/sanity/client";
 import HeroSection from "@/components/HeroSection";
 
 export const metadata: Metadata = {
@@ -9,6 +10,14 @@ export const metadata: Metadata = {
 };
 
 export const revalidate = 3600;
+
+type OtherPlaylist = { title: string; playlistId: string };
+
+type SermonSettings = {
+  seriesTitle?: string;
+  playlistId?: string;
+  otherPlaylists?: OtherPlaylist[];
+};
 
 const FALLBACK_VIDEOS: YouTubeVideo[] = [
   {
@@ -42,10 +51,27 @@ function formatDate(iso: string) {
   });
 }
 
+async function getSermonSettings(): Promise<SermonSettings | null> {
+  try {
+    return await client.fetch<SermonSettings>(
+      `*[_type == "sermonSettings"][0]{ seriesTitle, playlistId, otherPlaylists }`
+    );
+  } catch {
+    return null;
+  }
+}
+
 export default async function SermonsPage() {
-  const liveVideos = await getChannelVideos(7);
+  const settings = await getSermonSettings();
+
+  const liveVideos = settings?.playlistId
+    ? await getPlaylistVideos(settings.playlistId, 5)
+    : await getChannelVideos(5);
+
   const videos = liveVideos.length > 0 ? liveVideos : FALLBACK_VIDEOS;
   const [featured, ...rest] = videos;
+  const recent = rest.slice(0, 4);
+  const otherPlaylists = settings?.otherPlaylists?.slice(0, 4) ?? [];
 
   return (
     <>
@@ -60,7 +86,7 @@ export default async function SermonsPage() {
       <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-xl font-bold text-[#1a4731] mb-6">
-            Latest Message
+            {settings?.seriesTitle ? `${settings.seriesTitle} — Latest Message` : "Latest Message"}
           </h2>
           <div className="rounded-2xl overflow-hidden border border-gray-100 shadow-sm">
             <div className="aspect-video w-full">
@@ -87,14 +113,14 @@ export default async function SermonsPage() {
       </section>
 
       {/* Recent sermons grid */}
-      {rest.length > 0 && (
+      {recent.length > 0 && (
         <section className="py-10 pb-20 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <h2 className="text-xl font-bold text-[#1a4731] mb-6">
               Recent Messages
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {rest.map((v) => (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {recent.map((v) => (
                 <div
                   key={v.id + v.publishedAt}
                   className="rounded-2xl overflow-hidden border border-gray-100 hover:shadow-md transition-shadow"
@@ -123,8 +149,48 @@ export default async function SermonsPage() {
         </section>
       )}
 
+      {/* Other playlists */}
+      {otherPlaylists.length > 0 && (
+        <section className="py-10 pb-20 bg-[#f0fdf4]">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-xl font-bold text-[#1a4731] mb-6">
+              More Series
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {otherPlaylists.map((p) => (
+                <div
+                  key={p.playlistId}
+                  className="rounded-2xl overflow-hidden border border-gray-100 bg-white shadow-sm"
+                >
+                  <div className="aspect-video">
+                    <iframe
+                      className="w-full h-full"
+                      src={`https://www.youtube.com/embed/videoseries?list=${p.playlistId}`}
+                      title={p.title}
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  </div>
+                  <div className="p-5 flex items-center justify-between">
+                    <h3 className="font-bold text-[#1a4731] text-sm">{p.title}</h3>
+                    <a
+                      href={`https://www.youtube.com/playlist?list=${p.playlistId}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-xs font-semibold text-[#52b788] hover:underline"
+                    >
+                      Full playlist <ExternalLink size={12} />
+                    </a>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* YouTube CTA */}
-      <section className="py-16 bg-[#f0fdf4]">
+      <section className="py-16 bg-white">
         <div className="max-w-2xl mx-auto px-4 text-center">
           <div className="flex items-center justify-center w-12 h-12 rounded-full bg-red-600 mx-auto mb-4">
             <PlayCircle size={22} className="text-white" />

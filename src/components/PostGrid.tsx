@@ -10,6 +10,7 @@ export type Post = {
   _id: string;
   slug: { current: string };
   category: string;
+  blogSubCategory?: string;
   title: string;
   excerpt: string;
   publishedAt: string;
@@ -32,8 +33,13 @@ export const CATEGORY_COLOURS: Record<string, string> = {
   "Sunday School": "bg-green-50 text-green-700",
   Missions: "bg-emerald-50 text-emerald-700",
   Programs: "bg-violet-600 text-white",
+  Blogs: "bg-pink-50 text-pink-700",
   "Pastor's Devotion": "bg-orange-50 text-orange-700",
 };
+
+export function displayCategory(post: { category: string; blogSubCategory?: string }) {
+  return post.category === "Blogs" && post.blogSubCategory ? post.blogSubCategory : post.category;
+}
 
 export function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-AU", {
@@ -86,7 +92,7 @@ export default function PostGrid({
               ) : (
                 <div className="absolute inset-0 bg-[#f0fdf4] flex items-center justify-center">
                   <span className="text-[#52b788] text-xs uppercase tracking-widest font-semibold">
-                    {post.category}
+                    {displayCategory(post)}
                   </span>
                 </div>
               )}
@@ -106,8 +112,8 @@ export default function PostGrid({
               )}
 
               <div className="flex items-center justify-between mb-3">
-                <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${CATEGORY_COLOURS[post.category] ?? "bg-gray-100 text-gray-600"}`}>
-                  {post.category}
+                <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${CATEGORY_COLOURS[displayCategory(post)] ?? "bg-gray-100 text-gray-600"}`}>
+                  {displayCategory(post)}
                 </span>
                 <span className="flex items-center gap-1 text-xs text-gray-400">
                   <Calendar size={11} />

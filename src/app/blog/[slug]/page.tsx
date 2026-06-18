@@ -8,7 +8,7 @@ import { client } from "@/sanity/client";
 import { urlFor } from "@/sanity/lib/image";
 import { PortableText, type PortableTextComponents } from "@portabletext/react";
 import ArticleCarousel from "@/components/ArticleCarousel";
-import { CATEGORY_COLOURS } from "@/components/PostGrid";
+import { CATEGORY_COLOURS, displayCategory } from "@/components/PostGrid";
 import PdfBlock from "@/components/PdfBlock";
 import GalleryLightbox from "@/components/GalleryLightbox";
 import PlaylistBlock from "@/components/PlaylistBlock";
@@ -25,6 +25,7 @@ type Post = {
   category: string;
   subCategory?: string;
   programSubCategory?: string;
+  blogSubCategory?: string;
   excerpt: string;
   publishedAt: string;
   eventDateStart?: string;
@@ -38,7 +39,7 @@ async function getPost(slug: string): Promise<Post | null> {
   try {
     return await client.fetch<Post>(
       `*[_type == "post" && slug.current == $slug][0] {
-        _id, title, slug, category, subCategory, programSubCategory, excerpt, publishedAt, eventDateStart, eventDateEnd, author, mainImage, body
+        _id, title, slug, category, subCategory, programSubCategory, blogSubCategory, excerpt, publishedAt, eventDateStart, eventDateEnd, author, mainImage, body
       }`,
       { slug }
     );
@@ -85,7 +86,11 @@ function resolveBackLink(
   if (category === "Programs") {
     if (programSubCategory === "CEF") return { href: "/programs/cef", label: "Back to Church Extension Fellowship" };
     if (programSubCategory === "Conferences") return { href: "/programs/conferences", label: "Back to Summits & Conferences" };
+    if (programSubCategory === "One Worship") return { href: "/programs/one-worship", label: "Back to One Worship" };
     return { href: "/programs", label: "Back to Programs" };
+  }
+  if (category === "Blogs") {
+    return { href: "/blogs", label: "Back to Blogs" };
   }
   const map: Record<string, { href: string; label: string }> = {
     News:           { href: "/news",          label: "Back to News & Events" },
@@ -253,9 +258,9 @@ export default async function BlogPostPage({
             ) : null}
             {post.category && (
               <span
-                className={`text-xs font-semibold px-2 py-0.5 rounded-full ${CATEGORY_COLOURS[post.category] ?? "bg-gray-100 text-gray-600"}`}
+                className={`text-xs font-semibold px-2 py-0.5 rounded-full ${CATEGORY_COLOURS[displayCategory(post)] ?? "bg-gray-100 text-gray-600"}`}
               >
-                {post.category}
+                {displayCategory(post)}
               </span>
             )}
           </div>
