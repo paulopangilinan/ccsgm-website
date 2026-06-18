@@ -13,8 +13,8 @@ export const revalidate = 60;
 async function getPosts(): Promise<Post[]> {
   try {
     return await client.fetch<Post[]>(
-      `*[_type == "post" && category in ["Youth", "Music", "Couples"]] | order(publishedAt desc) {
-        _id, slug, category, title, excerpt, publishedAt, author, mainImage
+      `*[_type == "post" && category == "Blogs"] | order(publishedAt desc) {
+        _id, slug, category, blogSubCategory, title, excerpt, publishedAt, author, mainImage
       }`
     );
   } catch {

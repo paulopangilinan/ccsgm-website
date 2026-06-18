@@ -20,6 +20,7 @@ const missionLinks = [
 const programLinks = [
   { href: "/programs/cef", label: "Church Extension Fellowship (CEF)" },
   { href: "/programs/conferences", label: "Summits & Conferences" },
+  { href: "/programs/one-worship", label: "One Worship" },
 ];
 
 const projectLinks = [
