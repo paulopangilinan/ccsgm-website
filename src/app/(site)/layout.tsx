@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   keywords: ["CCSGM", "church", "Philippines", "Cavite", "evangelical", "gospel"],
 };
 
-export default function RootLayout({
+export default function SiteLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
