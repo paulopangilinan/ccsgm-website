@@ -1,4 +1,4 @@
-import { JSDOM } from "jsdom";
+import { parseHTML } from "linkedom";
 import { randomBytes } from "crypto";
 import { createClient } from "@sanity/client";
 
@@ -115,6 +115,8 @@ export type WpListItem = {
   link: string;
   date: string;
   excerpt: string;
+  slug: string;
+  alreadyMigrated?: boolean;
 };
 
 // Source sites this tool is allowed to fetch from. These routes accept a
@@ -148,12 +150,37 @@ export async function resolveCategoryFromUrl(categoryUrl: string): Promise<{
   return { siteUrl, categoryId: cats[0].id, categoryName: cats[0].name };
 }
 
+function getSanityClient(token: string) {
+  return createClient({
+    projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID!,
+    dataset: process.env.NEXT_PUBLIC_SANITY_DATASET ?? "production",
+    apiVersion: "2024-01-01",
+    token,
+    useCdn: false,
+  });
+}
+
+export async function markAlreadyMigrated(items: WpListItem[]): Promise<WpListItem[]> {
+  const token = process.env.SANITY_API_WRITE_TOKEN;
+  if (!token || items.length === 0) return items;
+
+  const client = getSanityClient(token);
+  const slugs = items.map((i) => i.slug);
+  const existing: string[] = await client.fetch(
+    `*[_type == "post" && slug.current in $slugs].slug.current`,
+    { slugs },
+    { perspective: "raw" }
+  );
+  const existingSet = new Set(existing);
+  return items.map((i) => ({ ...i, alreadyMigrated: existingSet.has(i.slug) }));
+}
+
 export async function listPostsInCategory(siteUrl: string, categoryId: number): Promise<WpListItem[]> {
   const items: WpListItem[] = [];
   let page = 1;
   while (true) {
     const res = await fetch(
-      `${siteUrl}/wp-json/wp/v2/posts?categories=${categoryId}&per_page=100&page=${page}&_fields=id,title,link,date,excerpt`
+      `${siteUrl}/wp-json/wp/v2/posts?categories=${categoryId}&per_page=100&page=${page}&_fields=id,title,link,date,excerpt,slug`
     );
     if (!res.ok) break;
     const data = await res.json();
@@ -165,6 +192,7 @@ export async function listPostsInCategory(siteUrl: string, categoryId: number): 
         link: p.link,
         date: p.date,
         excerpt: stripTags(p.excerpt?.rendered ?? "").slice(0, 160),
+        slug: p.slug,
       });
     }
     const totalPages = Number(res.headers.get("X-WP-TotalPages") ?? "1");
@@ -212,6 +240,7 @@ export type MigrateTarget = {
   category: string;
   subCategoryField?: "subCategory" | "programSubCategory" | "blogSubCategory";
   subCategoryValue?: string;
+  publish?: boolean;
 };
 
 export async function migrateWpPost(
@@ -224,13 +253,7 @@ export async function migrateWpPost(
   const token = process.env.SANITY_API_WRITE_TOKEN;
   if (!token) throw new Error("SANITY_API_WRITE_TOKEN is not configured");
 
-  const client = createClient({
-    projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID!,
-    dataset: process.env.NEXT_PUBLIC_SANITY_DATASET ?? "production",
-    apiVersion: "2024-01-01",
-    token,
-    useCdn: false,
-  });
+  const client = getSanityClient(token);
 
   const res = await fetch(`${siteUrl}/wp-json/wp/v2/posts/${wpPostId}?_embed`);
   if (!res.ok) throw new Error(`Could not fetch WordPress post ${wpPostId}`);
@@ -241,8 +264,8 @@ export async function migrateWpPost(
   const wpAuthorName: string | undefined = post._embedded?.author?.[0]?.name;
   const slug: string = post.slug || `wp-${wpPostId}`;
 
-  const dom = new JSDOM(`<div id="root">${post.content?.rendered ?? ""}</div>`);
-  const content = dom.window.document.getElementById("root")!;
+  const { document } = parseHTML(`<div id="root">${post.content?.rendered ?? ""}</div>`);
+  const content = document.getElementById("root")!;
   content.querySelector(".extra-hatom-entry-title")?.remove();
 
   let mainImageSrc: string | null = post._embedded?.["wp:featuredmedia"]?.[0]?.source_url ?? null;
@@ -257,8 +280,12 @@ export async function migrateWpPost(
     const tag = el.tagName.toLowerCase();
 
     if (tag === "figure" || (tag === "p" && el.querySelector("img"))) {
-      const img = el.querySelector("img");
-      if (img?.src) {
+      // A <p> can contain an image AND its own surrounding text (some WP posts
+      // cram everything into one paragraph) — extract/upload the image(s) but
+      // don't skip the rest of the element; let it fall through to the normal
+      // paragraph handling below so the text isn't discarded.
+      for (const img of Array.from(el.querySelectorAll("img"))) {
+        if (!img.src) continue;
         if (!mainImageSrc) {
           mainImageSrc = img.src;
           mainImageAssetId = await uploadImageFromUrl(client, img.src);
@@ -267,8 +294,8 @@ export async function migrateWpPost(
         if (sameImage(img.src, mainImageSrc)) continue;
         const assetId = await uploadImageFromUrl(client, img.src);
         blocks.push({ _type: "image", _key: key(), asset: { _type: "reference", _ref: assetId } });
-        continue;
       }
+      if (tag === "figure") continue;
     }
 
     if (tag === "p") {
@@ -316,8 +343,9 @@ export async function migrateWpPost(
 
   const excerpt = bodyTextForExcerpt.length > 200 ? bodyTextForExcerpt.slice(0, 197) + "…" : bodyTextForExcerpt;
 
+  const docId = target.publish ? `migrated-${slug}` : `drafts.migrated-${slug}`;
   const doc: Record<string, unknown> = {
-    _id: `drafts.migrated-${slug}`,
+    _id: docId,
     _type: "post",
     title,
     slug: { _type: "slug", current: slug },

@@ -6,6 +6,7 @@ type WpListItem = {
   link: string;
   date: string;
   excerpt: string;
+  alreadyMigrated?: boolean;
 };
 
 type RowStatus = "idle" | "pending" | "success" | "error";
@@ -29,7 +30,18 @@ const SUB_CATEGORY_CONFIG: Record<string, { field: "subCategory" | "programSubCa
 };
 
 const styles: Record<string, React.CSSProperties> = {
-  page: { padding: 32, maxWidth: 960, margin: "0 auto", color: "#e3e3e6", fontFamily: "inherit" },
+  wrapper: {
+    background: "#14151a",
+    minHeight: "100vh",
+    width: "100%",
+  },
+  page: {
+    padding: 32,
+    maxWidth: 960,
+    margin: "0 auto",
+    color: "#e3e3e6",
+    fontFamily: "inherit",
+  },
   h1: { fontSize: 20, fontWeight: 600, marginBottom: 4 },
   sub: { fontSize: 13, color: "#9a9ba3", marginBottom: 24 },
   row: { display: "flex", gap: 12, marginBottom: 16, alignItems: "center" },
@@ -98,10 +110,12 @@ export default function WpMigrationTool() {
 
   const [targetCategory, setTargetCategory] = useState("Blogs");
   const [targetSubCategory, setTargetSubCategory] = useState("Pastor's Devotion");
+  const [publishMode, setPublishMode] = useState<"draft" | "published">("draft");
 
   const subConfig = SUB_CATEGORY_CONFIG[targetCategory];
 
-  const allSelected = posts.length > 0 && selected.size === posts.length;
+  const selectablePosts = useMemo(() => posts.filter((p) => !p.alreadyMigrated), [posts]);
+  const allSelected = selectablePosts.length > 0 && selected.size === selectablePosts.length;
 
   async function handleFetch() {
     setLoading(true);
@@ -133,7 +147,7 @@ export default function WpMigrationTool() {
   }
 
   function toggleAll() {
-    setSelected(allSelected ? new Set() : new Set(posts.map((p) => p.wpId)));
+    setSelected(allSelected ? new Set() : new Set(selectablePosts.map((p) => p.wpId)));
   }
 
   async function handleMigrate() {
@@ -152,6 +166,7 @@ export default function WpMigrationTool() {
             category: targetCategory,
             subCategoryField: subConfig?.field,
             subCategoryValue: subConfig ? targetSubCategory : undefined,
+            publish: publishMode === "published",
           }),
         });
         const data = await res.json();
@@ -172,6 +187,7 @@ export default function WpMigrationTool() {
   }, [statuses]);
 
   return (
+    <div style={styles.wrapper}>
     <div style={styles.page}>
       <h1 style={styles.h1}>WordPress Migration</h1>
       <p style={styles.sub}>
@@ -231,6 +247,24 @@ export default function WpMigrationTool() {
                 ))}
               </select>
             )}
+            <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "#9a9ba3" }}>
+              <input
+                type="radio"
+                name="publishMode"
+                checked={publishMode === "draft"}
+                onChange={() => setPublishMode("draft")}
+              />
+              Draft
+            </label>
+            <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "#9a9ba3" }}>
+              <input
+                type="radio"
+                name="publishMode"
+                checked={publishMode === "published"}
+                onChange={() => setPublishMode("published")}
+              />
+              Published
+            </label>
             <button
               style={{ ...styles.button, ...(migrating || selected.size === 0 ? styles.buttonDisabled : {}) }}
               disabled={migrating || selected.size === 0}
@@ -253,12 +287,13 @@ export default function WpMigrationTool() {
             </div>
             {posts.map((p) => {
               const status = statuses[p.wpId] ?? "idle";
+              const disabled = migrating || p.alreadyMigrated;
               return (
-                <div key={p.wpId} style={styles.listRow}>
+                <div key={p.wpId} style={{ ...styles.listRow, opacity: p.alreadyMigrated ? 0.5 : 1 }}>
                   <input
                     type="checkbox"
                     checked={selected.has(p.wpId)}
-                    disabled={migrating}
+                    disabled={disabled}
                     onChange={() => toggle(p.wpId)}
                   />
                   <span style={styles.rowTitle}>
@@ -267,8 +302,8 @@ export default function WpMigrationTool() {
                     </a>
                   </span>
                   <span style={styles.rowDate}>{new Date(p.date).toLocaleDateString()}</span>
-                  <span style={{ ...styles.rowStatus, color: statusColor(status) }} title={statusMessages[p.wpId]}>
-                    {statusLabel(status)}
+                  <span style={{ ...styles.rowStatus, color: p.alreadyMigrated ? "#6a6b73" : statusColor(status) }} title={statusMessages[p.wpId]}>
+                    {p.alreadyMigrated ? "Already migrated" : statusLabel(status)}
                   </span>
                 </div>
               );
@@ -276,6 +311,7 @@ export default function WpMigrationTool() {
           </div>
         </>
       )}
+    </div>
     </div>
   );
 }

@@ -9,6 +9,7 @@ type Body = {
   category: string;
   subCategoryField?: MigrateTarget["subCategoryField"];
   subCategoryValue?: string;
+  publish?: boolean;
 };
 
 export async function POST(req: NextRequest) {
@@ -28,6 +29,7 @@ export async function POST(req: NextRequest) {
       category: body.category,
       subCategoryField: body.subCategoryField,
       subCategoryValue: body.subCategoryValue,
+      publish: body.publish,
     });
     return NextResponse.json(result);
   } catch (e) {
