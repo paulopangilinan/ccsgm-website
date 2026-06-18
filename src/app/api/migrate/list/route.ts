@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { resolveCategoryFromUrl, listPostsInCategory } from "@/lib/wpMigration";
+import { resolveCategoryFromUrl, listPostsInCategory, markAlreadyMigrated } from "@/lib/wpMigration";
 
 export const maxDuration = 60;
 
@@ -21,7 +21,8 @@ export async function GET(req: NextRequest) {
 
   try {
     const { siteUrl, categoryId, categoryName } = await resolveCategoryFromUrl(url);
-    const posts = await listPostsInCategory(siteUrl, categoryId);
+    const rawPosts = await listPostsInCategory(siteUrl, categoryId);
+    const posts = await markAlreadyMigrated(rawPosts);
     return NextResponse.json({ siteUrl, categoryName, posts });
   } catch (e) {
     return NextResponse.json({ error: e instanceof Error ? e.message : "Failed to fetch" }, { status: 500 });
