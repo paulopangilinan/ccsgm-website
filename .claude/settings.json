@@ -1,0 +1,41 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e \"require.resolve\\('@sanity/client'\\); require.resolve\\('dotenv'\\); console.log\\('ok'\\)\")",
+      "Bash(node scripts/migrate-surigao-mission.mjs)",
+      "Bash(rm scripts/migrate-surigao-mission.mjs)",
+      "Bash(rmdir scripts *)",
+      "Bash(curl -s http://localhost:3000/missions/surigao)",
+      "Bash(curl -s http://localhost:3000/missions)",
+      "Bash(kill %1)",
+      "Bash(awk '{print $5}')",
+      "Bash(tasklist //FI \"PID eq 23964\" //FI \"PID eq 7708\")",
+      "Skill(run)",
+      "Skill(run:*)",
+      "Bash(command -v chromium-cli)",
+      "Bash(node -e \"require.resolve\\('playwright'\\)\")",
+      "Bash(npx --no-install playwright --version)",
+      "Bash(npx -y -p playwright node scripts/check-console.mjs)",
+      "Bash(rm -f scripts/check-console.mjs)",
+      "Bash(node -e \"const s = require\\('sanity'\\); console.log\\(typeof s.useClient\\)\")",
+      "Bash(cd \"c:\\\\projects\\\\ccsgm-website\" && rm -rf \"src/app/\\(site\\)/programs/cef\" \"src/app/\\(site\\)/programs/conferences\" \"src/app/\\(site\\)/programs/one-worship\" && mkdir -p \"src/app/\\(site\\)/programs/[slug]\" && ls \"src/app/\\(site\\)/programs\")",
+      "Bash(cd \"c:\\\\projects\\\\ccsgm-website\" && rm -rf \"src/app/\\(site\\)/projects/gideon300\" && mkdir -p \"src/app/\\(site\\)/projects/[slug]\" && ls \"src/app/\\(site\\)/projects\")",
+      "Bash(node scripts/migrate-programs-projects.mjs)",
+      "Bash(rm scripts/migrate-programs-projects.mjs)",
+      "Bash(node -e ' *)",
+      "Bash(curl -s http://localhost:3001/missions)",
+      "Bash(curl -s http://localhost:3001/programs)",
+      "Bash(curl -s http://localhost:3001/programs/cef)",
+      "Bash(curl -s http://localhost:3001/projects)",
+      "Bash(curl -s http://localhost:3001/projects/gideon300)",
+      "Bash(curl -s http://localhost:3001/)",
+      "mcp__Sanity__patch_documents",
+      "mcp__Sanity__publish_documents",
+      "Bash(grep -o 'missionNavItems\\\\\\\\\":\\\\[[^]]*\\\\]\\\\|programNavItems\\\\\\\\\":\\\\[[^]]*\\\\]\\\\|projectNavItems\\\\\\\\\":\\\\[[^]]*\\\\]')"
+    ],
+    "additionalDirectories": [
+      "C:\\projects\\ccsgm-website\\src\\app\\(site)\\programs",
+      "C:\\projects\\ccsgm-website\\src\\app\\(site)\\projects"
+    ]
+  }
+}

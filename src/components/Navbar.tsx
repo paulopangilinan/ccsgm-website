@@ -5,26 +5,23 @@ import Image from "next/image";
 import { useState, useRef } from "react";
 import { Menu, X, ChevronDown, ChevronRight } from "lucide-react";
 
+type NavLinkItem = {
+  title: string;
+  slug: { current: string };
+};
+
+type NavbarProps = {
+  missionNavItems: NavLinkItem[];
+  programNavItems: NavLinkItem[];
+  projectNavItems: NavLinkItem[];
+};
+
 const preachingLinks = [
   { href: "/sermons", label: "Sermons" },
   { href: "/sunday-school", label: "Sunday School" },
   { href: "/testimonies", label: "Testimonies" },
   { href: "/readings", label: "Readings" },
   { href: "/blogs", label: "Blogs" },
-];
-
-const missionLinks = [
-  { href: "/missions/surigao", label: "Church Planting: Surigao Missions" },
-];
-
-const programLinks = [
-  { href: "/programs/cef", label: "Church Extension Fellowship (CEF)" },
-  { href: "/programs/conferences", label: "Summits & Conferences" },
-  { href: "/programs/one-worship", label: "One Worship" },
-];
-
-const projectLinks = [
-  { href: "/projects/gideon300", label: "Gideon 300 Building Project" },
 ];
 
 const passionLinks = [
@@ -37,7 +34,7 @@ const links = [
   { href: "/contact", label: "Contact" },
 ];
 
-export default function Navbar() {
+export default function Navbar({ missionNavItems, programNavItems, projectNavItems }: NavbarProps) {
   const [open, setOpen] = useState(false);
   const [preachingOpen, setPreachingOpen] = useState(false);
   const preachingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -47,11 +44,11 @@ export default function Navbar() {
   const missionsTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [programsOpen, setProgramsOpen] = useState(false);
   const programsTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [projectsOpen, setProjectsOpen] = useState(false);
+  const projectsTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [mobilePassionOpen, setMobilePassionOpen] = useState(false);
   const [mobileMissionsOpen, setMobileMissionsOpen] = useState(false);
   const [mobileProgramsOpen, setMobileProgramsOpen] = useState(false);
-  const [projectsOpen, setProjectsOpen] = useState(false);
-  const projectsTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [mobileProjectsOpen, setMobileProjectsOpen] = useState(false);
 
   function showPreaching() {
@@ -103,6 +100,20 @@ export default function Navbar() {
   }
 
   const dropdownItem = "block px-4 py-2 text-sm text-gray-600 hover:bg-[#f0fdf4] hover:text-[#1a4731] transition-colors";
+  const dropdownAllItem = "block px-4 py-2 text-sm font-semibold text-[#1a4731] hover:bg-[#f0fdf4] transition-colors border-t border-gray-100";
+
+  function FlyoutLinks({ basePath, allLabel, items }: { basePath: string; allLabel: string; items: NavLinkItem[] }) {
+    return (
+      <>
+        {items.map((item) => (
+          <Link key={item.slug.current} href={`${basePath}/${item.slug.current}`} className={dropdownItem}>
+            {item.title}
+          </Link>
+        ))}
+        <Link href={basePath} className={dropdownAllItem}>{allLabel}</Link>
+      </>
+    );
+  }
 
   return (
     <header className="sticky top-0 z-50 bg-white border-b border-gray-100 shadow-sm">
@@ -157,9 +168,7 @@ export default function Navbar() {
                     </button>
                     {programsOpen && (
                       <div className="absolute top-0 left-full ml-1 w-72 rounded-xl bg-white border border-gray-100 shadow-lg py-1 z-50" onMouseEnter={showPrograms} onMouseLeave={hidePrograms}>
-                        {programLinks.map((l) => (
-                          <Link key={l.href} href={l.href} className={dropdownItem}>{l.label}</Link>
-                        ))}
+                        <FlyoutLinks basePath="/programs" allLabel="All Programs" items={programNavItems} />
                       </div>
                     )}
                   </div>
@@ -171,9 +180,7 @@ export default function Navbar() {
                     </button>
                     {missionsOpen && (
                       <div className="absolute top-0 left-full ml-1 w-64 rounded-xl bg-white border border-gray-100 shadow-lg py-1 z-50" onMouseEnter={showMissions} onMouseLeave={hideMissions}>
-                        {missionLinks.map((l) => (
-                          <Link key={l.href} href={l.href} className={dropdownItem}>{l.label}</Link>
-                        ))}
+                        <FlyoutLinks basePath="/missions" allLabel="All Missions" items={missionNavItems} />
                       </div>
                     )}
                   </div>
@@ -185,9 +192,7 @@ export default function Navbar() {
                     </button>
                     {projectsOpen && (
                       <div className="absolute top-0 left-full ml-1 w-64 rounded-xl bg-white border border-gray-100 shadow-lg py-1 z-50" onMouseEnter={showProjects} onMouseLeave={hideProjects}>
-                        {projectLinks.map((l) => (
-                          <Link key={l.href} href={l.href} className={dropdownItem}>{l.label}</Link>
-                        ))}
+                        <FlyoutLinks basePath="/projects" allLabel="All Projects" items={projectNavItems} />
                       </div>
                     )}
                   </div>
@@ -250,31 +255,52 @@ export default function Navbar() {
                 <button className="flex items-center justify-between py-2 pl-3 text-sm font-medium text-gray-700 hover:text-[#1a4731] transition-colors w-full" onClick={() => setMobileProgramsOpen((v) => !v)}>
                   Programs <ChevronDown size={13} className={`mr-1 transition-transform ${mobileProgramsOpen ? "rotate-180" : ""}`} />
                 </button>
-                {mobileProgramsOpen && programLinks.map((l) => (
-                  <Link key={l.href} href={l.href} onClick={() => setOpen(false)} className="py-2 pl-8 text-sm text-gray-600 hover:text-[#1a4731] transition-colors block">
-                    {l.label}
-                  </Link>
-                ))}
+                {mobileProgramsOpen && (
+                  <>
+                    {programNavItems.map((item) => (
+                      <Link key={item.slug.current} href={`/programs/${item.slug.current}`} onClick={() => setOpen(false)} className="py-2 pl-8 text-sm text-gray-600 hover:text-[#1a4731] transition-colors block">
+                        {item.title}
+                      </Link>
+                    ))}
+                    <Link href="/programs" onClick={() => setOpen(false)} className="py-2 pl-8 text-sm font-semibold text-[#1a4731] block">
+                      All Programs
+                    </Link>
+                  </>
+                )}
 
                 {/* Missions */}
                 <button className="flex items-center justify-between py-2 pl-3 text-sm font-medium text-gray-700 hover:text-[#1a4731] transition-colors w-full" onClick={() => setMobileMissionsOpen((v) => !v)}>
                   Missions <ChevronDown size={13} className={`mr-1 transition-transform ${mobileMissionsOpen ? "rotate-180" : ""}`} />
                 </button>
-                {mobileMissionsOpen && missionLinks.map((l) => (
-                  <Link key={l.href} href={l.href} onClick={() => setOpen(false)} className="py-2 pl-8 text-sm text-gray-600 hover:text-[#1a4731] transition-colors block">
-                    {l.label}
-                  </Link>
-                ))}
+                {mobileMissionsOpen && (
+                  <>
+                    {missionNavItems.map((item) => (
+                      <Link key={item.slug.current} href={`/missions/${item.slug.current}`} onClick={() => setOpen(false)} className="py-2 pl-8 text-sm text-gray-600 hover:text-[#1a4731] transition-colors block">
+                        {item.title}
+                      </Link>
+                    ))}
+                    <Link href="/missions" onClick={() => setOpen(false)} className="py-2 pl-8 text-sm font-semibold text-[#1a4731] block">
+                      All Missions
+                    </Link>
+                  </>
+                )}
 
                 {/* Projects */}
                 <button className="flex items-center justify-between py-2 pl-3 text-sm font-medium text-gray-700 hover:text-[#1a4731] transition-colors w-full" onClick={() => setMobileProjectsOpen((v) => !v)}>
                   Projects <ChevronDown size={13} className={`mr-1 transition-transform ${mobileProjectsOpen ? "rotate-180" : ""}`} />
                 </button>
-                {mobileProjectsOpen && projectLinks.map((l) => (
-                  <Link key={l.href} href={l.href} onClick={() => setOpen(false)} className="py-2 pl-8 text-sm text-gray-600 hover:text-[#1a4731] transition-colors block">
-                    {l.label}
-                  </Link>
-                ))}
+                {mobileProjectsOpen && (
+                  <>
+                    {projectNavItems.map((item) => (
+                      <Link key={item.slug.current} href={`/projects/${item.slug.current}`} onClick={() => setOpen(false)} className="py-2 pl-8 text-sm text-gray-600 hover:text-[#1a4731] transition-colors block">
+                        {item.title}
+                      </Link>
+                    ))}
+                    <Link href="/projects" onClick={() => setOpen(false)} className="py-2 pl-8 text-sm font-semibold text-[#1a4731] block">
+                      All Projects
+                    </Link>
+                  </>
+                )}
 
                 {passionLinks.map((l) => (
                   <Link key={l.href} href={l.href} onClick={() => setOpen(false)} className="py-2 pl-3 text-sm font-medium text-gray-700 hover:text-[#1a4731] transition-colors block">

@@ -3,6 +3,9 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { getNavItems } from "@/lib/taxonomy";
+
+export const revalidate = 60;
 
 const inter = Inter({
   variable: "--font-inter",
@@ -19,13 +22,23 @@ export const metadata: Metadata = {
   keywords: ["CCSGM", "church", "Philippines", "Cavite", "evangelical", "gospel"],
 };
 
-export default function SiteLayout({
+export default async function SiteLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const [missionNavItems, programNavItems, projectNavItems] = await Promise.all([
+    getNavItems("mission"),
+    getNavItems("program"),
+    getNavItems("project"),
+  ]);
+
   return (
     <html lang="en" className={`${inter.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
-        <Navbar />
+        <Navbar
+          missionNavItems={missionNavItems}
+          programNavItems={programNavItems}
+          projectNavItems={projectNavItems}
+        />
         <main className="flex-1">{children}</main>
         <Footer />
       </body>

@@ -1,4 +1,5 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useClient } from "sanity";
 
 type WpListItem = {
   wpId: number;
@@ -10,6 +11,8 @@ type WpListItem = {
 };
 
 type RowStatus = "idle" | "pending" | "success" | "error";
+
+type RefOption = { _id: string; title: string };
 
 const CATEGORY_OPTIONS = [
   "News",
@@ -23,9 +26,21 @@ const CATEGORY_OPTIONS = [
   "Blogs",
 ];
 
-const SUB_CATEGORY_CONFIG: Record<string, { field: "subCategory" | "programSubCategory" | "blogSubCategory"; label: string; options: string[] }> = {
-  Missions: { field: "subCategory", label: "Mission Location", options: ["Surigao", "Agusan"] },
-  Programs: { field: "programSubCategory", label: "Program", options: ["CEF", "Conferences", "One Worship"] },
+// Categories whose sub-category is a reference to an admin-managed document
+// type, picked by title rather than from a fixed string list.
+const REFERENCE_DOC_TYPE: Record<string, "mission" | "program" | "project"> = {
+  Missions: "mission",
+  Programs: "program",
+  Projects: "project",
+};
+
+const REFERENCE_FIELD: Record<string, "subCategory" | "programSubCategory" | "projectSubCategory"> = {
+  Missions: "subCategory",
+  Programs: "programSubCategory",
+  Projects: "projectSubCategory",
+};
+
+const SUB_CATEGORY_CONFIG: Record<string, { field: "blogSubCategory"; label: string; options: string[] }> = {
   Blogs: { field: "blogSubCategory", label: "Blog Topic", options: ["Pastor's Devotion", "Youth", "Couples", "Music"] },
 };
 
@@ -97,6 +112,7 @@ function statusLabel(s: RowStatus) {
 }
 
 export default function WpMigrationTool() {
+  const client = useClient({ apiVersion: "2024-01-01" });
   const [url, setUrl] = useState("");
   const [siteUrl, setSiteUrl] = useState<string | null>(null);
   const [categoryName, setCategoryName] = useState<string | null>(null);
@@ -111,6 +127,27 @@ export default function WpMigrationTool() {
   const [targetCategory, setTargetCategory] = useState("Blogs");
   const [targetSubCategory, setTargetSubCategory] = useState("Pastor's Devotion");
   const [publishMode, setPublishMode] = useState<"draft" | "published">("draft");
+
+  // Reference options (mission/program/project docs) for whichever category
+  // is currently selected, keyed by doc type so switching categories doesn't
+  // re-fetch options already loaded.
+  const [refOptionsByType, setRefOptionsByType] = useState<Record<string, RefOption[]>>({});
+  const [targetRefId, setTargetRefId] = useState("");
+
+  const refDocType = REFERENCE_DOC_TYPE[targetCategory];
+  const refOptions = refDocType ? refOptionsByType[refDocType] : undefined;
+
+  useEffect(() => {
+    if (!refDocType || refOptionsByType[refDocType]) return;
+    client
+      .fetch<RefOption[]>(`*[_type == $type] | order(title asc) { _id, title }`, { type: refDocType })
+      .then((options) => setRefOptionsByType((prev) => ({ ...prev, [refDocType]: options })))
+      .catch(() => setRefOptionsByType((prev) => ({ ...prev, [refDocType]: [] })));
+  }, [client, refDocType, refOptionsByType]);
+
+  useEffect(() => {
+    setTargetRefId(refOptions?.[0]?._id ?? "");
+  }, [refDocType, refOptions]);
 
   const subConfig = SUB_CATEGORY_CONFIG[targetCategory];
 
@@ -157,6 +194,31 @@ export default function WpMigrationTool() {
     for (const wpId of ids) {
       setStatuses((s) => ({ ...s, [wpId]: "pending" }));
       try {
+        // Netlify's serverless functions hard-cap at 10–26s with no override,
+        // so posts with many/large photos can't upload them all inside one
+        // request. Instead: list the post's image URLs, upload each one via
+        // its own short-lived request (the browser has no such timeout and
+        // can run them in parallel), then send the final "assemble + save"
+        // request with the pre-uploaded asset IDs — that step alone is fast.
+        const imagesRes = await fetch(`/api/migrate/post-images?siteUrl=${encodeURIComponent(siteUrl)}&wpPostId=${wpId}`);
+        const imagesData = await imagesRes.json();
+        if (!imagesRes.ok) throw new Error(imagesData.error || "Failed to list images");
+
+        const images: Record<string, string> = {};
+        await Promise.all(
+          (imagesData.srcs as string[]).map(async (src) => {
+            const r = await fetch("/api/migrate/upload-image", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ src }),
+            });
+            const d = await r.json();
+            if (r.ok && d.assetId) images[src] = d.assetId;
+            // A single failed image shouldn't fail the whole post — migrateWpPost
+            // treats a missing map entry as "skip this image".
+          })
+        );
+
         const res = await fetch("/api/migrate/run", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -166,7 +228,10 @@ export default function WpMigrationTool() {
             category: targetCategory,
             subCategoryField: subConfig?.field,
             subCategoryValue: subConfig ? targetSubCategory : undefined,
+            referenceField: refDocType ? REFERENCE_FIELD[targetCategory] : undefined,
+            referenceId: refDocType ? targetRefId : undefined,
             publish: publishMode === "published",
+            images,
           }),
         });
         const data = await res.json();
@@ -246,6 +311,25 @@ export default function WpMigrationTool() {
                   <option key={o} value={o}>{o}</option>
                 ))}
               </select>
+            )}
+            {refDocType && (
+              refOptions === undefined ? (
+                <span style={{ fontSize: 13, color: "#9a9ba3" }}>Loading {targetCategory.toLowerCase()}…</span>
+              ) : refOptions.length > 0 ? (
+                <select
+                  style={styles.select}
+                  value={targetRefId}
+                  onChange={(e) => setTargetRefId(e.target.value)}
+                >
+                  {refOptions.map((o) => (
+                    <option key={o._id} value={o._id}>{o.title}</option>
+                  ))}
+                </select>
+              ) : (
+                <span style={{ fontSize: 13, color: "#9a9ba3" }}>
+                  No {targetCategory.toLowerCase()} yet — add one under {targetCategory} first.
+                </span>
+              )
             )}
             <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "#9a9ba3" }}>
               <input

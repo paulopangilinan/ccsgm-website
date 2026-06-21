@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { ExternalLink } from "lucide-react";
 import { getPlaylistVideos } from "@/lib/youtube";
 import { client } from "@/sanity/client";
+import { getPageContent } from "@/lib/pageContent";
 import PostGrid, { type Post } from "@/components/PostGrid";
+import PortableBody from "@/components/PortableBody";
 import HeroSection from "@/components/HeroSection";
 
 export const metadata: Metadata = {
@@ -35,9 +37,10 @@ function formatDate(iso: string) {
 }
 
 export default async function SundaySchoolPage() {
-  const [videos, posts] = await Promise.all([
+  const [videos, posts, introBody] = await Promise.all([
     getPlaylistVideos(PLAYLIST_ID, 6),
     getSanityPosts(),
+    getPageContent("pageContent-sunday-school"),
   ]);
 
   return (
@@ -48,6 +51,15 @@ export default async function SundaySchoolPage() {
         subtitle="Weekly teachings to ground us in Scripture and grow us in faith."
         imageName="sunday-school"
       />
+
+      {/* Editable intro section — managed in Studio under Page Content */}
+      {introBody && introBody.length > 0 && (
+        <section className="py-16 bg-white">
+          <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+            <PortableBody body={introBody} />
+          </div>
+        </section>
+      )}
 
       {/* Videos */}
       <section className="py-20 bg-white">
