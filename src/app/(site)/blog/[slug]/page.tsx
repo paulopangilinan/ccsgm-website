@@ -6,26 +6,26 @@ import { Calendar, ChevronLeft, User } from "lucide-react";
 import { formatEventDate } from "@/lib/formatEventDate";
 import { client } from "@/sanity/client";
 import { urlFor } from "@/sanity/lib/image";
-import { PortableText, type PortableTextComponents } from "@portabletext/react";
-import ArticleCarousel from "@/components/ArticleCarousel";
 import { CATEGORY_COLOURS, displayCategory } from "@/components/PostGrid";
-import PdfBlock from "@/components/PdfBlock";
-import GalleryLightbox from "@/components/GalleryLightbox";
-import PlaylistBlock from "@/components/PlaylistBlock";
-import { getPlaylistVideos, type YouTubeVideo } from "@/lib/youtube";
+import PostGrid, { type Post as PostGridPost } from "@/components/PostGrid";
+import PortableBody from "@/components/PortableBody";
 
 export const revalidate = 60;
 
 type SanityImage = { _type: "image"; asset: { _ref: string } };
+
+type TaxonomyRef = { _id: string; title: string; slug: { current: string } };
 
 type Post = {
   _id: string;
   title: string;
   slug: { current: string };
   category: string;
-  subCategory?: string;
-  programSubCategory?: string;
+  subCategory?: TaxonomyRef;
+  programSubCategory?: TaxonomyRef;
+  projectSubCategory?: TaxonomyRef;
   blogSubCategory?: string;
+  tags?: string[];
   excerpt: string;
   publishedAt: string;
   eventDateStart?: string;
@@ -35,16 +35,62 @@ type Post = {
   body: unknown[];
 };
 
+const RELATED_POST_FIELDS = `_id, slug, category, blogSubCategory, title, excerpt, publishedAt, eventDateStart, eventDateEnd, featured, author, mainImage`;
+const RELATED_POST_LIMIT = 3;
+
 async function getPost(slug: string): Promise<Post | null> {
   try {
     return await client.fetch<Post>(
       `*[_type == "post" && slug.current == $slug][0] {
-        _id, title, slug, category, subCategory, programSubCategory, blogSubCategory, excerpt, publishedAt, eventDateStart, eventDateEnd, author, mainImage, body
+        _id, title, slug, category, subCategory->{_id, title, slug}, programSubCategory->{_id, title, slug}, projectSubCategory->{_id, title, slug}, blogSubCategory, tags, excerpt, publishedAt, eventDateStart, eventDateEnd, author, mainImage, body
       }`,
       { slug }
     );
   } catch {
     return null;
+  }
+}
+
+async function getRelatedPosts(post: Post): Promise<PostGridPost[]> {
+  try {
+    const exclude = [post.slug.current];
+    let related: PostGridPost[] = [];
+
+    if (post.tags && post.tags.length > 0) {
+      related = await client.fetch<PostGridPost[]>(
+        `*[_type == "post" && !(slug.current in $exclude) && count(tags[@ in $tags]) > 0] | order(publishedAt desc) [0...${RELATED_POST_LIMIT}] { ${RELATED_POST_FIELDS} }`,
+        { exclude, tags: post.tags }
+      );
+      exclude.push(...related.map((r) => r.slug.current));
+    }
+
+    if (related.length < RELATED_POST_LIMIT) {
+      const needed = RELATED_POST_LIMIT - related.length;
+      let subFilter = "category == $category";
+      const params: Record<string, unknown> = { exclude, category: post.category };
+      if (post.category === "Missions" && post.subCategory) {
+        subFilter = `category == "Missions" && subCategory._ref == $subCat`;
+        params.subCat = post.subCategory._id;
+      } else if (post.category === "Programs" && post.programSubCategory) {
+        subFilter = `category == "Programs" && programSubCategory._ref == $subCat`;
+        params.subCat = post.programSubCategory._id;
+      } else if (post.category === "Projects" && post.projectSubCategory) {
+        subFilter = `category == "Projects" && projectSubCategory._ref == $subCat`;
+        params.subCat = post.projectSubCategory._id;
+      } else if (post.category === "Blogs" && post.blogSubCategory) {
+        subFilter = `category == "Blogs" && blogSubCategory == $subCat`;
+        params.subCat = post.blogSubCategory;
+      }
+      const fallback = await client.fetch<PostGridPost[]>(
+        `*[_type == "post" && !(slug.current in $exclude) && (${subFilter})] | order(publishedAt desc) [0...${needed}] { ${RELATED_POST_FIELDS} }`,
+        params
+      );
+      related = [...related, ...fallback];
+    }
+
+    return related;
+  } catch {
+    return [];
   }
 }
 
@@ -73,21 +119,23 @@ function formatDate(iso: string) {
 
 function resolveBackLink(
   category: string,
-  subCategory?: string,
-  programSubCategory?: string,
+  subCategory?: TaxonomyRef,
+  programSubCategory?: TaxonomyRef,
+  projectSubCategory?: TaxonomyRef,
   fromHome?: boolean,
 ): { href: string; label: string } {
   if (fromHome) return { href: "/", label: "Back to Home" };
   if (category === "Missions") {
-    if (subCategory === "Surigao") return { href: "/missions/surigao", label: "Back to Surigao Missions" };
-    if (subCategory === "Agusan")  return { href: "/missions/agusan",  label: "Back to Agusan Missions" };
+    if (subCategory) return { href: `/missions/${subCategory.slug.current}`, label: `Back to ${subCategory.title}` };
     return { href: "/missions", label: "Back to Missions" };
   }
   if (category === "Programs") {
-    if (programSubCategory === "CEF") return { href: "/programs/cef", label: "Back to Church Extension Fellowship" };
-    if (programSubCategory === "Conferences") return { href: "/programs/conferences", label: "Back to Summits & Conferences" };
-    if (programSubCategory === "One Worship") return { href: "/programs/one-worship", label: "Back to One Worship" };
+    if (programSubCategory) return { href: `/programs/${programSubCategory.slug.current}`, label: `Back to ${programSubCategory.title}` };
     return { href: "/programs", label: "Back to Programs" };
+  }
+  if (category === "Projects") {
+    if (projectSubCategory) return { href: `/projects/${projectSubCategory.slug.current}`, label: `Back to ${projectSubCategory.title}` };
+    return { href: "/projects", label: "Back to Projects" };
   }
   if (category === "Blogs") {
     return { href: "/blogs", label: "Back to Blogs" };
@@ -101,74 +149,6 @@ function resolveBackLink(
   };
   return map[category] ?? { href: "/blog", label: "Back to Articles" };
 }
-
-function getYouTubeId(url: string): string | null {
-  const match = url.match(
-    /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
-  );
-  return match ? match[1] : null;
-}
-
-const portableTextComponents: PortableTextComponents = {
-  types: {
-    youtube: ({ value }: { value: { url: string; caption?: string } }) => {
-      const id = getYouTubeId(value.url);
-      if (!id) return null;
-      return (
-        <div className="my-8">
-          <div className="aspect-video rounded-2xl overflow-hidden">
-            <iframe
-              className="w-full h-full"
-              src={`https://www.youtube.com/embed/${id}`}
-              title={value.caption || "YouTube video"}
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-            />
-          </div>
-          {value.caption && (
-            <p className="text-center text-xs text-gray-400 mt-2">{value.caption}</p>
-          )}
-        </div>
-      );
-    },
-    pdfEmbed: ({ value }: { value: { title: string; url: string; description?: string } }) => (
-      <PdfBlock title={value.title} url={value.url} description={value.description} />
-    ),
-    gallery: ({ value }: { value: { images: Array<SanityImage & { caption?: string }> } }) => {
-      const images = (value.images ?? []).map((img) =>
-        urlFor(img).width(1200).fit("max").auto("format").url()
-      );
-      if (images.length === 0) return null;
-      return <GalleryLightbox images={images} />;
-    },
-    carousel: ({ value }: { value: { images: Array<SanityImage & { caption?: string }> } }) => {
-      const images = (value.images ?? []).map((img) => ({
-        url: urlFor(img).width(900).fit("max").auto("format").url(),
-        caption: img.caption,
-      }));
-      if (images.length === 0) return null;
-      return <ArticleCarousel images={images} />;
-    },
-    image: ({ value }: { value: SanityImage & { caption?: string } }) => (
-      <figure className="my-8">
-        <div className="rounded-2xl overflow-hidden">
-          <Image
-            src={urlFor(value).width(900).fit("max").auto("format").url()}
-            alt={value.caption ?? ""}
-            width={900}
-            height={600}
-            className="w-full h-auto object-cover"
-          />
-        </div>
-        {value.caption && (
-          <figcaption className="text-center text-xs text-gray-400 mt-2">
-            {value.caption}
-          </figcaption>
-        )}
-      </figure>
-    ),
-  },
-};
 
 export default async function BlogPostPage({
   params,
@@ -186,43 +166,8 @@ export default async function BlogPostPage({
     ? urlFor(post.mainImage).width(1200).fit("max").auto("format").url()
     : null;
 
-  const backLink = resolveBackLink(post.category, post.subCategory, post.programSubCategory, from === "home");
-
-  // Pre-fetch any YouTube Playlist blocks in the body
-  type PlaylistBlock = { _type: string; playlistId?: string; maxVideos?: number };
-  const playlistBlocks = ((post.body ?? []) as PlaylistBlock[]).filter(
-    (b) => b._type === "youtubePlaylist" && b.playlistId
-  );
-  const playlistMap: Record<string, YouTubeVideo[]> = {};
-  await Promise.all(
-    playlistBlocks.map(async (b) => {
-      playlistMap[b.playlistId!] = await getPlaylistVideos(b.playlistId!, b.maxVideos ?? 6);
-    })
-  );
-
-  function buildComponents(): PortableTextComponents {
-    return {
-      ...portableTextComponents,
-      types: {
-        ...portableTextComponents.types,
-        pdfEmbed: ({ value }: { value: { title: string; url: string; description?: string } }) => (
-          <PdfBlock title={value.title} url={value.url} description={value.description} />
-        ),
-        gallery: ({ value }: { value: { images: Array<SanityImage & { caption?: string }> } }) => {
-          const images = (value.images ?? []).map((img) =>
-            urlFor(img).width(1200).fit("max").auto("format").url()
-          );
-          if (images.length === 0) return null;
-          return <GalleryLightbox images={images} />;
-        },
-        youtubePlaylist: ({ value }: { value: { playlistId: string; maxVideos?: number } }) => (
-          <PlaylistBlock videos={playlistMap[value.playlistId] ?? []} playlistId={value.playlistId} />
-        ),
-      },
-    };
-  }
-
-  const components = buildComponents();
+  const backLink = resolveBackLink(post.category, post.subCategory, post.programSubCategory, post.projectSubCategory, from === "home");
+  const relatedPosts = await getRelatedPosts(post);
 
   return (
     <>
@@ -291,17 +236,24 @@ export default async function BlogPostPage({
             </p>
           )}
           {post.body && post.body.length > 0 ? (
-            <div className="prose prose-green max-w-none prose-headings:text-[#1a4731] prose-a:text-[#52b788]">
-              <PortableText
-                value={post.body}
-                components={components}
-              />
-            </div>
+            <PortableBody body={post.body} />
           ) : (
             <p className="text-gray-400 italic">No content yet.</p>
           )}
         </div>
       </section>
+
+      {/* Related Articles */}
+      {relatedPosts.length > 0 && (
+        <section className="py-16 bg-[#f0fdf4]">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-2xl font-bold text-[#1a4731] mb-8">
+              Related Articles
+            </h2>
+            <PostGrid posts={relatedPosts} />
+          </div>
+        </section>
+      )}
     </>
   );
 }

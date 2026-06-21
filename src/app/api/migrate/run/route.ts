@@ -9,7 +9,10 @@ type Body = {
   category: string;
   subCategoryField?: MigrateTarget["subCategoryField"];
   subCategoryValue?: string;
+  referenceField?: MigrateTarget["referenceField"];
+  referenceId?: string;
   publish?: boolean;
+  images?: Record<string, string>;
 };
 
 export async function POST(req: NextRequest) {
@@ -25,12 +28,19 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const result = await migrateWpPost(body.siteUrl, body.wpPostId, {
-      category: body.category,
-      subCategoryField: body.subCategoryField,
-      subCategoryValue: body.subCategoryValue,
-      publish: body.publish,
-    });
+    const result = await migrateWpPost(
+      body.siteUrl,
+      body.wpPostId,
+      {
+        category: body.category,
+        subCategoryField: body.subCategoryField,
+        subCategoryValue: body.subCategoryValue,
+        referenceField: body.referenceField,
+        referenceId: body.referenceId,
+        publish: body.publish,
+      },
+      body.images
+    );
     return NextResponse.json(result);
   } catch (e) {
     return NextResponse.json({ error: e instanceof Error ? e.message : "Migration failed" }, { status: 500 });

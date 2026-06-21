@@ -20,64 +20,56 @@ function postsByCategory(
     );
 }
 
+// Each page-content slot is a fixed-id singleton (one editable block per spot
+// on a page), not something editors create new instances of.
+// IMPORTANT: never put a "." in `id` — Sanity reserves dotted IDs for internal
+// namespacing (drafts.*, versions.*) and silently excludes them from
+// anonymous/public reads regardless of document type. Use hyphens instead.
+function pageContentSingleton(
+  S: Parameters<StructureResolver>[0],
+  title: string,
+  id: string
+) {
+  return S.listItem()
+    .title(title)
+    .id(id)
+    .child(S.document().schemaType("pageContent").documentId(id));
+}
+
+// Mirrors the site's own navigation (see src/components/Navbar.tsx) rather
+// than a CMS-internal taxonomy — each page you'd find in the site nav has one
+// place here with everything that belongs to it (its editable page content,
+// if any, alongside its articles), instead of articles and page content
+// living in separate top-level sections.
 export const structure: StructureResolver = (S) =>
   S.list()
     .title("CCSGM")
     .items([
       S.listItem()
-        .title("Sermon Settings")
-        .id("sermonSettings")
-        .child(
-          S.document()
-            .schemaType("sermonSettings")
-            .documentId("sermonSettings")
-        ),
-
-      S.divider(),
-
-      S.listItem()
-        .title("Articles")
+        .title("Preaching")
         .icon(DocumentsIcon)
         .child(
           S.list()
-            .title("Articles")
+            .title("Preaching")
             .items([
-              postsByCategory(S, "News",              `category == "News"`,             "post-news"),
-              postsByCategory(S, "Events",             `category == "Events"`,           "post-events"),
-              postsByCategory(S, "Readings",           `category == "Readings"`,         "post-readings"),
-              postsByCategory(S, "Sunday School",      `category == "Sunday School"`,    "post-sunday-school"),
-              postsByCategory(S, "Testimonies",        `category == "Testimonies"`,      "post-testimonies"),
-
-              S.divider(),
+              S.listItem()
+                .title("Sermons")
+                .id("sermonSettings")
+                .child(S.document().schemaType("sermonSettings").documentId("sermonSettings")),
 
               S.listItem()
-                .title("Missions")
+                .title("Sunday School")
                 .child(
                   S.list()
-                    .title("Missions")
+                    .title("Sunday School")
                     .items([
-                      postsByCategory(S, "Surigao Missions", `category == "Missions" && subCategory == "Surigao"`, "post-missions-surigao"),
-                      postsByCategory(S, "Agusan Missions",  `category == "Missions" && subCategory == "Agusan"`,  "post-missions-agusan"),
-                      postsByCategory(S, "All Missions",     `category == "Missions"`),
+                      pageContentSingleton(S, "Page Content", "pageContent-sunday-school"),
+                      postsByCategory(S, "Articles", `category == "Sunday School"`, "post-sunday-school"),
                     ])
                 ),
 
-              S.listItem()
-                .title("Programs")
-                .child(
-                  S.list()
-                    .title("Programs")
-                    .items([
-                      postsByCategory(S, "Church Extension Fellowship (CEF)", `category == "Programs" && programSubCategory == "CEF"`,         "post-programs-cef"),
-                      postsByCategory(S, "Summits & Conferences",             `category == "Programs" && programSubCategory == "Conferences"`, "post-programs-conference"),
-                      postsByCategory(S, "One Worship",                       `category == "Programs" && programSubCategory == "One Worship"`, "post-programs-one-worship"),
-                      postsByCategory(S, "All Programs",                      `category == "Programs"`),
-                    ])
-                ),
-
-              postsByCategory(S, "Projects", `category == "Projects"`, "post-projects"),
-
-              S.divider(),
+              postsByCategory(S, "Testimonies", `category == "Testimonies"`, "post-testimonies"),
+              postsByCategory(S, "Readings",    `category == "Readings"`,    "post-readings"),
 
               S.listItem()
                 .title("Blogs")
@@ -92,10 +84,55 @@ export const structure: StructureResolver = (S) =>
                       postsByCategory(S, "All Blogs",          `category == "Blogs"`),
                     ])
                 ),
-
-              S.divider(),
-
-              S.documentTypeListItem("post").title("All Articles"),
             ])
         ),
+
+      S.listItem()
+        .title("Missions")
+        .child(
+          S.list()
+            .title("Missions")
+            .items([
+              S.documentTypeListItem("mission").title("Missions"),
+              postsByCategory(S, "Articles", `category == "Missions"`, "post-missions"),
+            ])
+        ),
+
+      S.listItem()
+        .title("Programs")
+        .child(
+          S.list()
+            .title("Programs")
+            .items([
+              S.documentTypeListItem("program").title("Programs"),
+              postsByCategory(S, "Articles", `category == "Programs"`, "post-programs"),
+            ])
+        ),
+
+      S.listItem()
+        .title("Projects")
+        .child(
+          S.list()
+            .title("Projects")
+            .items([
+              S.documentTypeListItem("project").title("Projects"),
+              postsByCategory(S, "Articles", `category == "Projects"`, "post-projects"),
+            ])
+        ),
+
+      S.listItem()
+        .title("News & Events")
+        .child(
+          S.list()
+            .title("News & Events")
+            .items([
+              postsByCategory(S, "News",               `category == "News"`,           "post-news"),
+              postsByCategory(S, "Events",              `category == "Events"`,         "post-events"),
+              postsByCategory(S, "All News & Events",   `category in ["News","Events"]`),
+            ])
+        ),
+
+      S.divider(),
+
+      S.documentTypeListItem("post").title("All Articles"),
     ]);

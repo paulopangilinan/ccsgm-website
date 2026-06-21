@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { client } from "@/sanity/client";
-import PostGrid, { type Post } from "@/components/PostGrid";
+import { type Post } from "@/components/PostGrid";
+import BlogsExplorer from "@/components/BlogsExplorer";
 import HeroSection from "@/components/HeroSection";
 
 export const metadata: Metadata = {
@@ -36,7 +37,7 @@ export default async function BlogsPage() {
 
       <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <PostGrid posts={posts} emptyMessage="No blog posts yet. Check back soon." />
+          <BlogsExplorer posts={posts} />
         </div>
       </section>
     </>

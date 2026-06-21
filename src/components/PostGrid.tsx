@@ -11,6 +11,7 @@ export type Post = {
   slug: { current: string };
   category: string;
   blogSubCategory?: string;
+  tags?: string[];
   title: string;
   excerpt: string;
   publishedAt: string;

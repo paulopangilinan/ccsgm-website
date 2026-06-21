@@ -6,7 +6,7 @@ import type { Template } from "sanity";
  * Blog Post and choosing category/sub-category from dropdowns.
  */
 export const templates = (prev: Template[]): Template[] => [
-  ...prev.filter((t) => t.id !== "post" && t.id !== "sermonSettings"),
+  ...prev.filter((t) => t.id !== "post" && t.id !== "sermonSettings" && t.id !== "pageContent"),
   {
     id: "post-news",
     title: "News",
@@ -68,33 +68,15 @@ export const templates = (prev: Template[]): Template[] => [
     value: { category: "Blogs", blogSubCategory: "Music" },
   },
   {
-    id: "post-missions-surigao",
-    title: "Mission — Surigao",
+    id: "post-missions",
+    title: "Mission Article",
     schemaType: "post",
-    value: { category: "Missions", subCategory: "Surigao" },
+    value: { category: "Missions" },
   },
   {
-    id: "post-missions-agusan",
-    title: "Mission — Agusan",
+    id: "post-programs",
+    title: "Program Article",
     schemaType: "post",
-    value: { category: "Missions", subCategory: "Agusan" },
-  },
-  {
-    id: "post-programs-cef",
-    title: "Program — CEF Article",
-    schemaType: "post",
-    value: { category: "Programs", programSubCategory: "CEF" },
-  },
-  {
-    id: "post-programs-conference",
-    title: "Program — Conference",
-    schemaType: "post",
-    value: { category: "Programs", programSubCategory: "Conferences" },
-  },
-  {
-    id: "post-programs-one-worship",
-    title: "Program — One Worship",
-    schemaType: "post",
-    value: { category: "Programs", programSubCategory: "One Worship" },
+    value: { category: "Programs" },
   },
 ];
