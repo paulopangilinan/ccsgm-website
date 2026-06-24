@@ -1,12 +1,21 @@
 import { client } from "@/sanity/client";
 
-export async function getPageContent(id: string): Promise<unknown[] | null> {
+type SanityImage = { _type: "image"; asset: { _ref: string } };
+
+export type PageContent = {
+  body?: unknown[];
+  heroImage?: SanityImage;
+  heroEyebrow?: string;
+  heroTitle?: string;
+  heroSubtitle?: string;
+};
+
+export async function getPageContent(id: string): Promise<PageContent | null> {
   try {
-    const doc = await client.fetch<{ body?: unknown[] } | null>(
-      `*[_id == $id][0]{ body }`,
+    return await client.fetch<PageContent | null>(
+      `*[_id == $id][0]{ body, heroImage, heroEyebrow, heroTitle, heroSubtitle }`,
       { id }
     );
-    return doc?.body ?? null;
   } catch {
     return null;
   }

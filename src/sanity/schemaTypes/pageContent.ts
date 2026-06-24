@@ -22,6 +22,32 @@ export const pageContentType = defineType({
       validation: (r) => r.required(),
     }),
     defineField({
+      name: "heroImage",
+      title: "Hero Image",
+      type: "image",
+      options: { hotspot: true },
+      description: "Replaces this page's default hero image, if set.",
+    }),
+    defineField({
+      name: "heroEyebrow",
+      title: "Hero Eyebrow",
+      type: "string",
+      description: "Small label shown above the hero title. Leave blank to use the page's default.",
+    }),
+    defineField({
+      name: "heroTitle",
+      title: "Hero Title",
+      type: "string",
+      description: "Leave blank to use the page's default.",
+    }),
+    defineField({
+      name: "heroSubtitle",
+      title: "Hero Subtitle",
+      type: "text",
+      rows: 3,
+      description: "Leave blank to use the page's default.",
+    }),
+    defineField({
       name: "body",
       title: "Content",
       type: "array",

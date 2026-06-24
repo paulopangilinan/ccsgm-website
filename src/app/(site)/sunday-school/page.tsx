@@ -6,6 +6,7 @@ import { getPageContent } from "@/lib/pageContent";
 import PostGrid, { type Post } from "@/components/PostGrid";
 import PortableBody from "@/components/PortableBody";
 import HeroSection from "@/components/HeroSection";
+import { urlFor } from "@/sanity/lib/image";
 
 export const metadata: Metadata = {
   title: "Sunday School",
@@ -37,26 +38,33 @@ function formatDate(iso: string) {
 }
 
 export default async function SundaySchoolPage() {
-  const [videos, posts, introBody] = await Promise.all([
+  const [videos, posts, pageContent] = await Promise.all([
     getPlaylistVideos(PLAYLIST_ID, 6),
     getSanityPosts(),
     getPageContent("pageContent-sunday-school"),
   ]);
+  const heroImageUrl = pageContent?.heroImage
+    ? urlFor(pageContent.heroImage).width(1600).height(900).fit("crop").auto("format").url()
+    : undefined;
 
   return (
     <>
       <HeroSection
-        eyebrow="Preaching"
-        title="Sunday School"
-        subtitle="Weekly teachings to ground us in Scripture and grow us in faith."
+        eyebrow={pageContent?.heroEyebrow || "Preaching"}
+        title={pageContent?.heroTitle || "Sunday School"}
+        subtitle={
+          pageContent?.heroSubtitle ||
+          "Weekly teachings to ground us in Scripture and grow us in faith."
+        }
+        imageUrl={heroImageUrl}
         imageName="sunday-school"
       />
 
       {/* Editable intro section — managed in Studio under Page Content */}
-      {introBody && introBody.length > 0 && (
+      {pageContent?.body && pageContent.body.length > 0 && (
         <section className="py-16 bg-white">
           <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-            <PortableBody body={introBody} />
+            <PortableBody body={pageContent.body} />
           </div>
         </section>
       )}

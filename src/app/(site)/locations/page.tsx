@@ -1,76 +1,43 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { MapPin, Phone, Mail, Clock } from "lucide-react";
 import HeroSection from "@/components/HeroSection";
+import { urlFor } from "@/sanity/lib/image";
+import { getLocationsPage } from "@/lib/locationsPage";
+
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "Locations",
   description: "Find a CCSGM congregation near you across Cavite and Surigao del Sur.",
 };
 
-const locations = [
-  {
-    name: "CCSGM Kawit",
-    address: "213 Don Pedro Subdivision, Kaingen, Kawit, Cavite",
-    phone: "(046) 472-9443",
-    email: "ccsgm.kawit@gmail.com",
-    schedule: "Sunday 7:30 am & 10:00 am",
-    note: "Main / Flagship Church",
-    mapQuery: "213+Don+Pedro+Subdivision+Kaingen+Kawit+Cavite+Philippines",
-  },
-  {
-    name: "CCSGM Cavite City",
-    address: "768 P. Burgos Ave, Caridad, Cavite City",
-    phone: "0977-783-6101",
-    email: null,
-    schedule: "Sunday 9:00 am",
-    note: null,
-    mapQuery: "768+P.+Burgos+Ave+Caridad+Cavite+City+Philippines",
-  },
-  {
-    name: "CCSGM Imus",
-    address: "Acacia Townhomes Alapan 1-A, Road 17 corner Road 28, Imus, Cavite",
-    phone: "0998-447-8180 / 0945-830-4612",
-    email: null,
-    schedule: "Sunday 10:00 am",
-    note: null,
-    mapQuery: "Acacia+Townhomes+Alapan+1-A+Road+17+Imus+Cavite+Philippines",
-  },
-  {
-    name: "CCSGM Dasmariñas",
-    address: "2F JCMB Building, Pamilihang Lungsod ng Dasmariñas",
-    phone: null,
-    email: null,
-    schedule: "Sunday 9:00 am",
-    note: null,
-    mapQuery: "Pamilihang+Lungsod+ng+Dasmarinas+Cavite+Philippines",
-  },
-  {
-    name: "CCSGM Carascal",
-    address: "Bgy. Gamuton, Carascal, Surigao del Sur",
-    phone: null,
-    email: "info@grey-chicken-485947.hostingersite.com",
-    schedule: "Sunday 8:00 am",
-    note: "Missions Church",
-    mapQuery: "Barangay+Gamuton+Carascal+Surigao+del+Sur+Philippines",
-  },
-];
+export default async function LocationsPage() {
+  const page = await getLocationsPage();
+  const heroImageUrl = page?.heroImage
+    ? urlFor(page.heroImage).width(1600).height(900).fit("crop").auto("format").url()
+    : undefined;
+  const churches = page?.churches ?? [];
 
-export default function LocationsPage() {
   return (
     <>
       <HeroSection
-        eyebrow="Worship With Us"
-        title="Find a Location Near You"
-        subtitle="CCSGM has five congregations across Cavite province and Surigao del Sur. All are welcome."
+        eyebrow={page?.heroEyebrow || "Worship With Us"}
+        title={page?.heroTitle || "Find a Location Near You"}
+        subtitle={
+          page?.heroSubtitle ||
+          "CCSGM has five congregations across Cavite province and Surigao del Sur. All are welcome."
+        }
+        imageUrl={heroImageUrl}
         imageName="locations"
       />
       {/* Location cards */}
       <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col gap-6">
-            {locations.map((loc) => (
+            {churches.map((loc) => (
               <div
-                key={loc.name}
+                key={loc._key}
                 className="flex flex-col md:flex-row rounded-2xl border border-gray-100 hover:border-[#52b788]/40 hover:shadow-md transition-all overflow-hidden"
               >
                 {/* Details */}
@@ -85,6 +52,16 @@ export default function LocationsPage() {
                       </span>
                     )}
                   </div>
+                  {loc.image && (
+                    <div className="relative w-full h-40 rounded-xl overflow-hidden mb-4">
+                      <Image
+                        src={urlFor(loc.image).width(700).height(400).fit("crop").auto("format").url()}
+                        alt={loc.name}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                  )}
                   <ul className="space-y-2.5">
                     <li className="flex items-start gap-2 text-sm text-gray-600">
                       <MapPin size={15} className="text-[#52b788] mt-0.5 shrink-0" />

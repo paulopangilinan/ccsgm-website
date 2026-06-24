@@ -46,6 +46,21 @@ export const structure: StructureResolver = (S) =>
     .title("CCSGM")
     .items([
       S.listItem()
+        .title("About Page")
+        .id("about-page")
+        .child(S.document().schemaType("aboutPage").documentId("about-page")),
+
+      S.listItem()
+        .title("Locations Page")
+        .id("locations-page")
+        .child(S.document().schemaType("locationsPage").documentId("locations-page")),
+
+      S.listItem()
+        .title("Site Settings")
+        .id("site-settings")
+        .child(S.document().schemaType("siteSettings").documentId("site-settings")),
+
+      S.listItem()
         .title("Preaching")
         .icon(DocumentsIcon)
         .child(
