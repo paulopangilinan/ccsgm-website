@@ -39,7 +39,6 @@ export default function Footer() {
             <ul className="space-y-2 text-sm">
               {[
                 { href: "/about", label: "Who We Are" },
-                { href: "/ministries", label: "Ministries" },
                 { href: "/sermons", label: "Sermons" },
                 { href: "/locations", label: "Locations" },
                 { href: "/give", label: "Give" },

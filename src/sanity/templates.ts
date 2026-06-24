@@ -44,28 +44,10 @@ export const templates = (prev: Template[]): Template[] => [
     value: { category: "Sunday School" },
   },
   {
-    id: "post-blogs-pastors-devotion",
-    title: "Blog — Pastor's Devotion",
+    id: "post-blogs",
+    title: "Blog Article",
     schemaType: "post",
-    value: { category: "Blogs", blogSubCategory: "Pastor's Devotion" },
-  },
-  {
-    id: "post-blogs-youth",
-    title: "Blog — Youth",
-    schemaType: "post",
-    value: { category: "Blogs", blogSubCategory: "Youth" },
-  },
-  {
-    id: "post-blogs-couples",
-    title: "Blog — Couples",
-    schemaType: "post",
-    value: { category: "Blogs", blogSubCategory: "Couples" },
-  },
-  {
-    id: "post-blogs-music",
-    title: "Blog — Music",
-    schemaType: "post",
-    value: { category: "Blogs", blogSubCategory: "Music" },
+    value: { category: "Blogs" },
   },
   {
     id: "post-missions",

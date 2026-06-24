@@ -291,9 +291,7 @@ async function uploadImagesConcurrently(
 
 export type MigrateTarget = {
   category: string;
-  subCategoryField?: "blogSubCategory";
-  subCategoryValue?: string;
-  referenceField?: "subCategory" | "programSubCategory" | "projectSubCategory";
+  referenceField?: "subCategory" | "programSubCategory" | "projectSubCategory" | "blogSubCategory";
   referenceId?: string;
   publish?: boolean;
 };
@@ -527,9 +525,6 @@ export async function migrateWpPost(
   };
   if (mainImageAssetId) {
     doc.mainImage = { _type: "image", asset: { _type: "reference", _ref: mainImageAssetId } };
-  }
-  if (target.subCategoryField && target.subCategoryValue) {
-    doc[target.subCategoryField] = target.subCategoryValue;
   }
   if (target.referenceField && target.referenceId) {
     doc[target.referenceField] = { _type: "reference", _ref: target.referenceId };

@@ -28,20 +28,18 @@ const CATEGORY_OPTIONS = [
 
 // Categories whose sub-category is a reference to an admin-managed document
 // type, picked by title rather than from a fixed string list.
-const REFERENCE_DOC_TYPE: Record<string, "mission" | "program" | "project"> = {
+const REFERENCE_DOC_TYPE: Record<string, "mission" | "program" | "project" | "blogCategory"> = {
   Missions: "mission",
   Programs: "program",
   Projects: "project",
+  Blogs: "blogCategory",
 };
 
-const REFERENCE_FIELD: Record<string, "subCategory" | "programSubCategory" | "projectSubCategory"> = {
+const REFERENCE_FIELD: Record<string, "subCategory" | "programSubCategory" | "projectSubCategory" | "blogSubCategory"> = {
   Missions: "subCategory",
   Programs: "programSubCategory",
   Projects: "projectSubCategory",
-};
-
-const SUB_CATEGORY_CONFIG: Record<string, { field: "blogSubCategory"; label: string; options: string[] }> = {
-  Blogs: { field: "blogSubCategory", label: "Blog Topic", options: ["Pastor's Devotion", "Youth", "Couples", "Music"] },
+  Blogs: "blogSubCategory",
 };
 
 const styles: Record<string, React.CSSProperties> = {
@@ -125,7 +123,6 @@ export default function WpMigrationTool() {
   const [migrating, setMigrating] = useState(false);
 
   const [targetCategory, setTargetCategory] = useState("Blogs");
-  const [targetSubCategory, setTargetSubCategory] = useState("Pastor's Devotion");
   const [publishMode, setPublishMode] = useState<"draft" | "published">("draft");
 
   // Reference options (mission/program/project docs) for whichever category
@@ -148,8 +145,6 @@ export default function WpMigrationTool() {
   useEffect(() => {
     setTargetRefId(refOptions?.[0]?._id ?? "");
   }, [refDocType, refOptions]);
-
-  const subConfig = SUB_CATEGORY_CONFIG[targetCategory];
 
   const selectablePosts = useMemo(() => posts.filter((p) => !p.alreadyMigrated), [posts]);
   const allSelected = selectablePosts.length > 0 && selected.size === selectablePosts.length;
@@ -226,8 +221,6 @@ export default function WpMigrationTool() {
             siteUrl,
             wpPostId: wpId,
             category: targetCategory,
-            subCategoryField: subConfig?.field,
-            subCategoryValue: subConfig ? targetSubCategory : undefined,
             referenceField: refDocType ? REFERENCE_FIELD[targetCategory] : undefined,
             referenceId: refDocType ? targetRefId : undefined,
             publish: publishMode === "published",
@@ -291,27 +284,12 @@ export default function WpMigrationTool() {
             <select
               style={styles.select}
               value={targetCategory}
-              onChange={(e) => {
-                setTargetCategory(e.target.value);
-                const cfg = SUB_CATEGORY_CONFIG[e.target.value];
-                setTargetSubCategory(cfg ? cfg.options[0] : "");
-              }}
+              onChange={(e) => setTargetCategory(e.target.value)}
             >
               {CATEGORY_OPTIONS.map((c) => (
                 <option key={c} value={c}>{c}</option>
               ))}
             </select>
-            {subConfig && (
-              <select
-                style={styles.select}
-                value={targetSubCategory}
-                onChange={(e) => setTargetSubCategory(e.target.value)}
-              >
-                {subConfig.options.map((o) => (
-                  <option key={o} value={o}>{o}</option>
-                ))}
-              </select>
-            )}
             {refDocType && (
               refOptions === undefined ? (
                 <span style={{ fontSize: 13, color: "#9a9ba3" }}>Loading {targetCategory.toLowerCase()}…</span>

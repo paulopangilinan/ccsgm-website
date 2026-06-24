@@ -4,13 +4,14 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight, Calendar, Home } from "lucide-react";
-import { CATEGORY_COLOURS, formatDate } from "./PostGrid";
+import { categoryColour, displayCategory, formatDate } from "./PostGrid";
 import { formatEventDate } from "@/lib/formatEventDate";
 
 export type FeaturedPost = {
   _id: string;
   slug: { current: string };
   category: string;
+  blogSubCategory?: { _id: string; title: string };
   title: string;
   excerpt: string;
   publishedAt: string;
@@ -169,8 +170,8 @@ export default function FeaturedCarousel({ posts }: { posts: FeaturedPost[] }) {
         {/* Text column */}
         <div className="featured-carousel-details flex-1 max-w-none md:max-w-sm lg:max-w-md flex flex-col px-4 pt-0 pb-4 md:px-0 md:py-10">
           <div className="flex items-center gap-3 mb-3 md:mb-4">
-            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${CATEGORY_COLOURS[post.category] ?? "bg-gray-100 text-gray-600"}`}>
-              {post.category}
+            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${categoryColour(displayCategory(post))}`}>
+              {displayCategory(post)}
             </span>
             {post.category === "Events" && post.eventDateStart ? (
               <span className="flex items-center gap-1 text-xs font-semibold text-indigo-300">
