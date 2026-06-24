@@ -1,21 +1,51 @@
 "use client";
 
 import { useState } from "react";
+import Script from "next/script";
 import { MapPin, Phone, Mail, Clock } from "lucide-react";
 import HeroSection from "@/components/HeroSection";
 
+const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+
 export default function ContactClient() {
-  const [status, setStatus] = useState<"idle" | "sending" | "sent">("idle");
+  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error" | "bot-check-failed">("idle");
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+
+    const form = new FormData(e.currentTarget);
+    const turnstileToken = form.get("cf-turnstile-response");
+    if (TURNSTILE_SITE_KEY && !turnstileToken) {
+      setStatus("bot-check-failed");
+      return;
+    }
+
     setStatus("sending");
-    await new Promise((r) => setTimeout(r, 800));
-    setStatus("sent");
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          firstName: form.get("firstName"),
+          lastName: form.get("lastName"),
+          email: form.get("email"),
+          subject: form.get("subject"),
+          message: form.get("message"),
+          turnstileToken,
+        }),
+      });
+      if (!res.ok) throw new Error("Failed to send");
+      setStatus("sent");
+    } catch {
+      setStatus("error");
+    }
   }
 
   return (
     <>
+      {TURNSTILE_SITE_KEY && (
+        <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer />
+      )}
       <HeroSection
         eyebrow="We'd Love to Hear From You"
         title="Contact Us"
@@ -51,6 +81,7 @@ export default function ContactClient() {
                       </label>
                       <input
                         type="text"
+                        name="firstName"
                         required
                         className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#52b788] focus:ring-1 focus:ring-[#52b788] text-sm"
                         placeholder="Juan"
@@ -62,6 +93,7 @@ export default function ContactClient() {
                       </label>
                       <input
                         type="text"
+                        name="lastName"
                         required
                         className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#52b788] focus:ring-1 focus:ring-[#52b788] text-sm"
                         placeholder="dela Cruz"
@@ -74,6 +106,7 @@ export default function ContactClient() {
                     </label>
                     <input
                       type="email"
+                      name="email"
                       required
                       className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#52b788] focus:ring-1 focus:ring-[#52b788] text-sm"
                       placeholder="juan@example.com"
@@ -84,6 +117,7 @@ export default function ContactClient() {
                       Subject
                     </label>
                     <select
+                      name="subject"
                       required
                       className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#52b788] focus:ring-1 focus:ring-[#52b788] text-sm text-gray-700"
                     >
@@ -102,12 +136,26 @@ export default function ContactClient() {
                       Message
                     </label>
                     <textarea
+                      name="message"
                       required
                       rows={5}
                       className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#52b788] focus:ring-1 focus:ring-[#52b788] text-sm resize-none"
                       placeholder="How can we help?"
                     />
                   </div>
+                  {TURNSTILE_SITE_KEY && (
+                    <div className="cf-turnstile" data-sitekey={TURNSTILE_SITE_KEY} />
+                  )}
+                  {status === "bot-check-failed" && (
+                    <p className="text-sm text-red-600">
+                      Please wait for the verification check above to complete, then try again.
+                    </p>
+                  )}
+                  {status === "error" && (
+                    <p className="text-sm text-red-600">
+                      Something went wrong sending your message. Please try again, or email us directly.
+                    </p>
+                  )}
                   <button
                     type="submit"
                     disabled={status === "sending"}

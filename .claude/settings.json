@@ -31,7 +31,17 @@
       "Bash(curl -s http://localhost:3001/)",
       "mcp__Sanity__patch_documents",
       "mcp__Sanity__publish_documents",
-      "Bash(grep -o 'missionNavItems\\\\\\\\\":\\\\[[^]]*\\\\]\\\\|programNavItems\\\\\\\\\":\\\\[[^]]*\\\\]\\\\|projectNavItems\\\\\\\\\":\\\\[[^]]*\\\\]')"
+      "Bash(grep -o 'missionNavItems\\\\\\\\\":\\\\[[^]]*\\\\]\\\\|programNavItems\\\\\\\\\":\\\\[[^]]*\\\\]\\\\|projectNavItems\\\\\\\\\":\\\\[[^]]*\\\\]')",
+      "Bash(node scripts/seed-about-page.mjs)",
+      "Bash(rm scripts/seed-about-page.mjs)",
+      "Bash(curl -s http://localhost:3000/about)",
+      "Bash(node scripts/seed-locations-page.mjs)",
+      "Bash(rm scripts/seed-locations-page.mjs)",
+      "Bash(curl -s -o /tmp/loc.html -w \"HTTP:%{http_code}\\\\n\" http://localhost:3000/locations)",
+      "Bash(curl -s http://localhost:3000/locations)",
+      "Bash(node scripts/seed-site-settings.mjs)",
+      "Bash(rm scripts/seed-site-settings.mjs)",
+      "Bash(grep -c \"^NEXT_PUBLIC_TURNSTILE_SITE_KEY=.\\\\+$\\\\|^TURNSTILE_SECRET_KEY=.\\\\+$\" .env.local)"
     ],
     "additionalDirectories": [
       "C:\\projects\\ccsgm-website\\src\\app\\(site)\\programs",
