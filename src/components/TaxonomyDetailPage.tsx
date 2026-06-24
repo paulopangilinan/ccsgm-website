@@ -16,13 +16,17 @@ type Props = {
   updatesLabel: string;
 };
 
-async function getRelatedPosts(postCategory: string, postSubField: string, itemId: string): Promise<Post[]> {
+// Pulls posts that either belong to this item via the reference field, or
+// are tagged with its title — e.g. a Blogs-categorised post tagged "Summits
+// & Conferences" shows up here even though its own category/sub-category
+// don't point at this program.
+async function getRelatedPosts(postCategory: string, postSubField: string, itemId: string, itemTitle: string): Promise<Post[]> {
   try {
     const posts = await client.fetch<RawPost[]>(
-      `*[_type == "post" && category == $postCategory && ${postSubField}._ref == $itemId] | order(publishedAt desc) {
-        _id, slug, category, title, excerpt, publishedAt, featured, author, mainImage
+      `*[_type == "post" && ((category == $postCategory && ${postSubField}._ref == $itemId) || $itemTitle in tags)] | order(publishedAt desc) {
+        _id, slug, category, blogSubCategory->{_id, title}, tags, title, excerpt, publishedAt, featured, author, mainImage
       }`,
-      { postCategory, itemId }
+      { postCategory, itemId, itemTitle }
     );
     return posts.map((p) => ({ ...p, mainImage: p.mainImage ?? undefined }));
   } catch {
@@ -34,7 +38,7 @@ export default async function TaxonomyDetailPage({ type, slug, postCategory, pos
   const item = await getTaxonomyItemBySlug(type, slug);
   if (!item) notFound();
 
-  const posts = await getRelatedPosts(postCategory, postSubField, item._id);
+  const posts = await getRelatedPosts(postCategory, postSubField, item._id, item.title);
   const heroImageUrl = item.heroImage
     ? urlFor(item.heroImage).width(1600).height(900).fit("crop").auto("format").url()
     : undefined;

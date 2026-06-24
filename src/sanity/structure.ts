@@ -92,11 +92,8 @@ export const structure: StructureResolver = (S) =>
                   S.list()
                     .title("Blogs")
                     .items([
-                      postsByCategory(S, "Pastor's Devotion", `category == "Blogs" && blogSubCategory == "Pastor's Devotion"`, "post-blogs-pastors-devotion"),
-                      postsByCategory(S, "Youth",              `category == "Blogs" && blogSubCategory == "Youth"`,             "post-blogs-youth"),
-                      postsByCategory(S, "Couples",            `category == "Blogs" && blogSubCategory == "Couples"`,           "post-blogs-couples"),
-                      postsByCategory(S, "Music",              `category == "Blogs" && blogSubCategory == "Music"`,             "post-blogs-music"),
-                      postsByCategory(S, "All Blogs",          `category == "Blogs"`),
+                      S.documentTypeListItem("blogCategory").title("Blog Categories"),
+                      postsByCategory(S, "Articles", `category == "Blogs"`, "post-blogs"),
                     ])
                 ),
             ])

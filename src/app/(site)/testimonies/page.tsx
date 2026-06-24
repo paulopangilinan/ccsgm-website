@@ -14,7 +14,7 @@ async function getPosts(): Promise<Post[]> {
   try {
     return await client.fetch<Post[]>(
       `*[_type == "post" && category == "Testimonies"] | order(publishedAt desc) {
-        _id, slug, category, title, excerpt, publishedAt, author, mainImage
+        _id, slug, category, tags, title, excerpt, publishedAt, author, mainImage
       }`
     );
   } catch {

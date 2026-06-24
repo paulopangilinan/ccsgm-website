@@ -65,7 +65,7 @@ async function getPosts(): Promise<Post[]> {
   try {
     const posts = await client.fetch<Post[]>(
       `*[_type == "post" && category in ["News", "Events"]] | order(coalesce(eventDateStart, publishedAt) desc) {
-        _id, slug, category, title, excerpt, publishedAt, eventDateStart, eventDateEnd, featured, author, mainImage
+        _id, slug, category, tags, title, excerpt, publishedAt, eventDateStart, eventDateEnd, featured, author, mainImage
       }`
     );
     return posts.length > 0 ? posts : FALLBACK_POSTS;

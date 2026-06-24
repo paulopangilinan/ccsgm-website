@@ -24,10 +24,6 @@ const preachingLinks = [
   { href: "/blogs", label: "Blogs" },
 ];
 
-const passionLinks = [
-  { href: "/ministries", label: "Ministries" },
-];
-
 const links = [
   { href: "/locations", label: "Locations" },
   { href: "/news", label: "News & Events" },
@@ -196,10 +192,6 @@ export default function Navbar({ missionNavItems, programNavItems, projectNavIte
                       </div>
                     )}
                   </div>
-
-                  {passionLinks.map((l) => (
-                    <Link key={l.href} href={l.href} className={dropdownItem}>{l.label}</Link>
-                  ))}
                 </div>
               )}
             </div>
@@ -301,12 +293,6 @@ export default function Navbar({ missionNavItems, programNavItems, projectNavIte
                     </Link>
                   </>
                 )}
-
-                {passionLinks.map((l) => (
-                  <Link key={l.href} href={l.href} onClick={() => setOpen(false)} className="py-2 pl-3 text-sm font-medium text-gray-700 hover:text-[#1a4731] transition-colors block">
-                    {l.label}
-                  </Link>
-                ))}
               </>
             )}
 

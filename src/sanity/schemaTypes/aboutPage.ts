@@ -1,4 +1,5 @@
 import { defineArrayMember, defineField, defineType } from "sanity";
+import { infoSectionBlocks } from "./infoSectionBlocks";
 
 /**
  * Singleton powering /about. Unlike `pageContent` (one freeform rich-text
@@ -39,10 +40,11 @@ export const aboutPageType = defineType({
       rows: 3,
     }),
     defineField({
-      name: "missionStatement",
+      name: "missionContent",
       title: "Our Mission",
-      type: "text",
-      rows: 4,
+      type: "array",
+      of: infoSectionBlocks,
+      description: "Displayed side by side with \"Our Family of Churches\" below.",
     }),
     defineField({
       name: "timeline",
@@ -55,24 +57,32 @@ export const aboutPageType = defineType({
           fields: [
             defineField({ name: "year", title: "Year", type: "string", validation: (r) => r.required() }),
             defineField({ name: "event", title: "Event", type: "text", rows: 2, validation: (r) => r.required() }),
+            defineField({
+              name: "caption",
+              title: "Sub-caption",
+              type: "string",
+              description: "Optional extra detail shown when hovering this event on the timeline.",
+            }),
+            defineField({
+              name: "photo",
+              title: "Photo",
+              type: "image",
+              options: { hotspot: true },
+              description: "Optional — shown when hovering this event on the timeline.",
+            }),
           ],
           preview: {
-            select: { title: "year", subtitle: "event" },
+            select: { title: "year", subtitle: "event", media: "photo" },
           },
         }),
       ],
     }),
     defineField({
-      name: "familyOfChurchesParagraphs",
+      name: "familyOfChurchesContent",
       title: "Our Family of Churches",
       type: "array",
-      of: [defineArrayMember({ type: "text", rows: 3 })],
-      description: "Each entry is rendered as its own paragraph.",
-    }),
-    defineField({
-      name: "statementOfFaithUrl",
-      title: "Statement of Faith URL",
-      type: "url",
+      of: infoSectionBlocks,
+      description: "Add a Button block here for links like \"Statement of Faith\".",
     }),
     defineField({
       name: "values",

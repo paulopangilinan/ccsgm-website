@@ -31,7 +31,7 @@ async function getFeaturedPosts(): Promise<FeaturedPost[]> {
 
     const featured = await client.fetch<RawPost[]>(
       `*[_type == "post" && featured == true && ${PAST_EVENT_FILTER}] {
-        _id, slug, category, title, excerpt, publishedAt, eventDateStart, eventDateEnd, mainImage
+        _id, slug, category, blogSubCategory->{_id, title}, title, excerpt, publishedAt, eventDateStart, eventDateEnd, mainImage
       }`
     );
 
@@ -42,7 +42,7 @@ async function getFeaturedPosts(): Promise<FeaturedPost[]> {
     const needed = 8 - featured.length;
     const recent = await client.fetch<RawPost[]>(
       `*[_type == "post" && !(_id in $ids) && ${PAST_EVENT_FILTER}] | order(coalesce(eventDateStart, publishedAt) desc)[0..${needed - 1}] {
-        _id, slug, category, title, excerpt, publishedAt, eventDateStart, eventDateEnd, mainImage
+        _id, slug, category, blogSubCategory->{_id, title}, title, excerpt, publishedAt, eventDateStart, eventDateEnd, mainImage
       }`,
       { ids: featuredIds }
     );

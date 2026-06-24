@@ -6,7 +6,7 @@ import { Calendar, ChevronLeft, User } from "lucide-react";
 import { formatEventDate } from "@/lib/formatEventDate";
 import { client } from "@/sanity/client";
 import { urlFor } from "@/sanity/lib/image";
-import { CATEGORY_COLOURS, displayCategory } from "@/components/PostGrid";
+import { categoryColour, displayCategory, tagColour } from "@/components/PostGrid";
 import PostGrid, { type Post as PostGridPost } from "@/components/PostGrid";
 import PortableBody from "@/components/PortableBody";
 
@@ -24,7 +24,7 @@ type Post = {
   subCategory?: TaxonomyRef;
   programSubCategory?: TaxonomyRef;
   projectSubCategory?: TaxonomyRef;
-  blogSubCategory?: string;
+  blogSubCategory?: { _id: string; title: string };
   tags?: string[];
   excerpt: string;
   publishedAt: string;
@@ -35,14 +35,14 @@ type Post = {
   body: unknown[];
 };
 
-const RELATED_POST_FIELDS = `_id, slug, category, blogSubCategory, title, excerpt, publishedAt, eventDateStart, eventDateEnd, featured, author, mainImage`;
+const RELATED_POST_FIELDS = `_id, slug, category, blogSubCategory->{_id, title}, tags, title, excerpt, publishedAt, eventDateStart, eventDateEnd, featured, author, mainImage`;
 const RELATED_POST_LIMIT = 3;
 
 async function getPost(slug: string): Promise<Post | null> {
   try {
     return await client.fetch<Post>(
       `*[_type == "post" && slug.current == $slug][0] {
-        _id, title, slug, category, subCategory->{_id, title, slug}, programSubCategory->{_id, title, slug}, projectSubCategory->{_id, title, slug}, blogSubCategory, tags, excerpt, publishedAt, eventDateStart, eventDateEnd, author, mainImage, body
+        _id, title, slug, category, subCategory->{_id, title, slug}, programSubCategory->{_id, title, slug}, projectSubCategory->{_id, title, slug}, blogSubCategory->{_id, title}, tags, excerpt, publishedAt, eventDateStart, eventDateEnd, author, mainImage, body
       }`,
       { slug }
     );
@@ -78,14 +78,31 @@ async function getRelatedPosts(post: Post): Promise<PostGridPost[]> {
         subFilter = `category == "Projects" && projectSubCategory._ref == $subCat`;
         params.subCat = post.projectSubCategory._id;
       } else if (post.category === "Blogs" && post.blogSubCategory) {
-        subFilter = `category == "Blogs" && blogSubCategory == $subCat`;
-        params.subCat = post.blogSubCategory;
+        subFilter = `category == "Blogs" && blogSubCategory._ref == $subCat`;
+        params.subCat = post.blogSubCategory._id;
       }
       const fallback = await client.fetch<PostGridPost[]>(
         `*[_type == "post" && !(slug.current in $exclude) && (${subFilter})] | order(publishedAt desc) [0...${needed}] { ${RELATED_POST_FIELDS} }`,
         params
       );
       related = [...related, ...fallback];
+      exclude.push(...fallback.map((r) => r.slug.current));
+    }
+
+    // Cross-category match: an article tagged with this post's category or
+    // specific sub-category (e.g. a Blogs post tagged "Summits & Conferences")
+    // is related to it even though its own main category differs — surfaces
+    // it here rather than only on posts sharing the same category/sub-category.
+    if (related.length < RELATED_POST_LIMIT) {
+      const needed = RELATED_POST_LIMIT - related.length;
+      const subTitle =
+        post.subCategory?.title || post.programSubCategory?.title || post.projectSubCategory?.title || post.blogSubCategory?.title;
+      const matchTitles = subTitle ? [post.category, subTitle] : [post.category];
+      const byTag = await client.fetch<PostGridPost[]>(
+        `*[_type == "post" && !(slug.current in $exclude) && count(tags[@ in $matchTitles]) > 0] | order(publishedAt desc) [0...${needed}] { ${RELATED_POST_FIELDS} }`,
+        { exclude, matchTitles }
+      );
+      related = [...related, ...byTag];
     }
 
     return related;
@@ -203,12 +220,26 @@ export default async function BlogPostPage({
             ) : null}
             {post.category && (
               <span
-                className={`text-xs font-semibold px-2 py-0.5 rounded-full ${CATEGORY_COLOURS[displayCategory(post)] ?? "bg-gray-100 text-gray-600"}`}
+                className={`text-xs font-semibold px-2 py-0.5 rounded-full ${categoryColour(displayCategory(post))}`}
               >
                 {displayCategory(post)}
               </span>
             )}
           </div>
+          {post.tags && post.tags.filter((t) => t !== displayCategory(post)).length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mt-4">
+              {post.tags
+                .filter((t) => t !== displayCategory(post))
+                .map((tag) => (
+                  <span
+                    key={tag}
+                    className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${tagColour(tag)}`}
+                  >
+                    {tag}
+                  </span>
+                ))}
+            </div>
+          )}
         </div>
       </section>
 

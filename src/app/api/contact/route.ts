@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import nodemailer from "nodemailer";
-import { getSiteSettings } from "@/lib/siteSettings";
+import { getSiteSettings, getContactRecipients } from "@/lib/siteSettings";
 
 type Body = {
   firstName?: string;
@@ -62,8 +62,8 @@ export async function POST(req: NextRequest) {
   }
 
   const settings = await getSiteSettings();
-  const to = settings?.contactEmail;
-  if (!to) {
+  const to = getContactRecipients(settings);
+  if (to.length === 0) {
     return NextResponse.json({ error: "No contact recipient configured" }, { status: 500 });
   }
 

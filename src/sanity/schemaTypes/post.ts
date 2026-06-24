@@ -1,5 +1,6 @@
 import { defineField, defineType } from "sanity";
 import { bodyBlocks } from "./bodyBlocks";
+import { TagsInput } from "../components/TagsInput";
 
 export const postType = defineType({
   name: "post",
@@ -64,9 +65,9 @@ export const postType = defineType({
     defineField({
       name: "blogSubCategory",
       title: "Blog Topic",
-      type: "string",
+      type: "reference",
+      to: [{ type: "blogCategory" }],
       description: "Select the specific topic this blog post belongs to.",
-      options: { list: ["Pastor's Devotion", "Youth", "Couples", "Music"] },
       hidden: ({ document }) => document?.category !== "Blogs",
     }),
     defineField({
@@ -74,28 +75,7 @@ export const postType = defineType({
       title: "Tags",
       type: "array",
       of: [{ type: "string" }],
-      options: {
-        list: [
-          "News",
-          "Events",
-          "Testimonies",
-          "Readings",
-          "Projects",
-          "Sunday School",
-          "Missions",
-          "Surigao",
-          "Agusan",
-          "Programs",
-          "CEF",
-          "Conferences",
-          "One Worship",
-          "Blogs",
-          "Pastor's Devotion",
-          "Youth",
-          "Couples",
-          "Music",
-        ],
-      },
+      components: { input: TagsInput },
       description:
         "Optional secondary topics this post relates to, beyond its main category — e.g. a Conference recap that's also about Music. Used to surface it under \"Related Articles\" on other posts.",
     }),

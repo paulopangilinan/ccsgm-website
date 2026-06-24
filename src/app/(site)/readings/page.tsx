@@ -115,8 +115,8 @@ const conferences: Conference[] = [
 async function getSanityPosts(): Promise<Post[]> {
   try {
     return await client.fetch<Post[]>(
-      `*[_type == "post" && (category == "Readings" || (category == "Blogs" && blogSubCategory == "Pastor's Devotion"))] | order(publishedAt desc) {
-        _id, slug, category, blogSubCategory, title, excerpt, publishedAt, author, mainImage
+      `*[_type == "post" && (category == "Readings" || (category == "Blogs" && blogSubCategory->title == "Pastor's Devotion"))] | order(publishedAt desc) {
+        _id, slug, category, blogSubCategory->{_id, title}, tags, title, excerpt, publishedAt, author, mainImage
       }`
     );
   } catch {

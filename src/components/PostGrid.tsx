@@ -10,7 +10,7 @@ export type Post = {
   _id: string;
   slug: { current: string };
   category: string;
-  blogSubCategory?: string;
+  blogSubCategory?: { _id: string; title: string } | string;
   tags?: string[];
   title: string;
   excerpt: string;
@@ -21,6 +21,11 @@ export type Post = {
   author: string;
   mainImage?: SanityImage;
 };
+
+function blogSubCategoryTitle(blogSubCategory: Post["blogSubCategory"]): string | undefined {
+  if (!blogSubCategory) return undefined;
+  return typeof blogSubCategory === "string" ? blogSubCategory : blogSubCategory.title;
+}
 
 export const CATEGORY_COLOURS: Record<string, string> = {
   News: "bg-blue-50 text-blue-700",
@@ -38,8 +43,48 @@ export const CATEGORY_COLOURS: Record<string, string> = {
   "Pastor's Devotion": "bg-orange-50 text-orange-700",
 };
 
-export function displayCategory(post: { category: string; blogSubCategory?: string }) {
-  return post.category === "Blogs" && post.blogSubCategory ? post.blogSubCategory : post.category;
+// Used for any label without a fixed entry above — admin-created mission,
+// program, project, and blog category titles, plus tag pills — so they get
+// a distinct colour instead of all collapsing into one grey fallback.
+const COLOUR_PALETTE = [
+  "bg-blue-50 text-blue-700",
+  "bg-emerald-50 text-emerald-700",
+  "bg-amber-50 text-amber-700",
+  "bg-rose-50 text-rose-700",
+  "bg-violet-50 text-violet-700",
+  "bg-cyan-50 text-cyan-700",
+  "bg-orange-50 text-orange-700",
+  "bg-fuchsia-50 text-fuchsia-700",
+  "bg-lime-50 text-lime-700",
+  "bg-indigo-50 text-indigo-700",
+  "bg-teal-50 text-teal-700",
+  "bg-pink-50 text-pink-700",
+  "bg-sky-50 text-sky-700",
+  "bg-yellow-50 text-yellow-700",
+  "bg-purple-50 text-purple-700",
+];
+
+function hashColour(label: string): string {
+  let hash = 0;
+  for (let i = 0; i < label.length; i++) {
+    hash = (hash * 31 + label.charCodeAt(i)) >>> 0;
+  }
+  return COLOUR_PALETTE[hash % COLOUR_PALETTE.length];
+}
+
+/** A label's fixed brand colour if it has one, else a deterministic colour from the palette. */
+export function categoryColour(label: string): string {
+  return CATEGORY_COLOURS[label] ?? hashColour(label);
+}
+
+/** Tag pills never have fixed brand colours — always palette-derived. */
+export function tagColour(label: string): string {
+  return hashColour(label);
+}
+
+export function displayCategory(post: { category: string; blogSubCategory?: Post["blogSubCategory"] }) {
+  const topic = blogSubCategoryTitle(post.blogSubCategory);
+  return post.category === "Blogs" && topic ? topic : post.category;
 }
 
 export function formatDate(iso: string) {
@@ -113,7 +158,7 @@ export default function PostGrid({
               )}
 
               <div className="flex items-center justify-between mb-3">
-                <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${CATEGORY_COLOURS[displayCategory(post)] ?? "bg-gray-100 text-gray-600"}`}>
+                <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${categoryColour(displayCategory(post))}`}>
                   {displayCategory(post)}
                 </span>
                 <span className="flex items-center gap-1 text-xs text-gray-400">
@@ -132,6 +177,20 @@ export default function PostGrid({
               <p className="text-gray-500 text-sm leading-relaxed flex-1">
                 {post.excerpt}
               </p>
+              {post.tags && post.tags.filter((t) => t !== displayCategory(post)).length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mt-4">
+                  {post.tags
+                    .filter((t) => t !== displayCategory(post))
+                    .map((tag) => (
+                      <span
+                        key={tag}
+                        className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${tagColour(tag)}`}
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                </div>
+              )}
               <div className="mt-5 flex items-center justify-between">
                 <span className="text-xs text-gray-400">{post.author}</span>
                 <Link

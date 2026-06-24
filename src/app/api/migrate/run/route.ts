@@ -7,8 +7,6 @@ type Body = {
   siteUrl: string;
   wpPostId: number;
   category: string;
-  subCategoryField?: MigrateTarget["subCategoryField"];
-  subCategoryValue?: string;
   referenceField?: MigrateTarget["referenceField"];
   referenceId?: string;
   publish?: boolean;
@@ -33,8 +31,6 @@ export async function POST(req: NextRequest) {
       body.wpPostId,
       {
         category: body.category,
-        subCategoryField: body.subCategoryField,
-        subCategoryValue: body.subCategoryValue,
         referenceField: body.referenceField,
         referenceId: body.referenceId,
         publish: body.publish,

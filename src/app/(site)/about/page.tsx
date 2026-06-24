@@ -3,8 +3,9 @@ import Image from "next/image";
 import { CheckCircle } from "lucide-react";
 import ValueBody from "@/components/ValueBody";
 import HeroSection from "@/components/HeroSection";
+import HistoryTimeline from "@/components/HistoryTimeline";
 import { urlFor } from "@/sanity/lib/image";
-import { getAboutPage } from "@/lib/aboutPage";
+import { getAboutPage, type InfoSectionBlock } from "@/lib/aboutPage";
 
 export const revalidate = 60;
 
@@ -13,6 +14,30 @@ export const metadata: Metadata = {
   description:
     "Learn about CCSGM's history, beliefs, values, and leadership.",
 };
+
+function InfoSectionContent({ blocks }: { blocks: InfoSectionBlock[] }) {
+  return (
+    <>
+      {blocks.map((block) =>
+        block._type === "sectionButton" ? (
+          <a
+            key={block._key}
+            href={block.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center px-5 py-2.5 mt-2 rounded-full bg-[#1a4731] text-white text-sm font-semibold hover:bg-[#16382a] transition-colors"
+          >
+            {block.label}
+          </a>
+        ) : (
+          <p key={block._key} className="text-gray-600 leading-relaxed mb-4">
+            {block.text}
+          </p>
+        )
+      )}
+    </>
+  );
+}
 
 export default async function AboutPage() {
   const about = await getAboutPage();
@@ -33,60 +58,33 @@ export default async function AboutPage() {
         imageName="about"
       />
 
-      {/* Mission */}
-      {about?.missionStatement && (
-        <section className="py-20 bg-white">
-          <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-2xl font-bold text-[#1a4731] mb-5">Our Mission</h2>
-            <p className="text-gray-600 leading-relaxed text-lg">
-              {about.missionStatement}
-            </p>
-          </div>
-        </section>
-      )}
-
       {/* Timeline */}
       {about?.timeline && about.timeline.length > 0 && (
-        <section className="py-20 bg-[#f0fdf4]">
-          <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-2xl font-bold text-[#1a4731] mb-10">Our History</h2>
-            <ol className="relative border-l-2 border-[#52b788]/30 space-y-8">
-              {about.timeline.map(({ _key, year, event }) => (
-                <li key={_key} className="pl-8 relative">
-                  <div className="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-[#52b788]" />
-                  <p className="text-xs font-bold text-[#52b788] uppercase tracking-widest mb-1">
-                    {year}
-                  </p>
-                  <p className="text-gray-700 text-sm leading-relaxed">{event}</p>
-                </li>
-              ))}
-            </ol>
+        <section className="py-20 bg-[#1a4731]">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-2xl font-bold text-white mb-10">Our History</h2>
+            <HistoryTimeline items={about.timeline} />
           </div>
         </section>
       )}
 
-      {/* Family of Churches */}
-      {about?.familyOfChurchesParagraphs && about.familyOfChurchesParagraphs.length > 0 && (
+      {/* Mission + Family of Churches — side by side on desktop */}
+      {((about?.missionContent && about.missionContent.length > 0) ||
+        (about?.familyOfChurchesContent && about.familyOfChurchesContent.length > 0)) && (
         <section className="py-20 bg-white">
-          <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-2xl font-bold text-[#1a4731] mb-5">
-              Our Family of Churches
-            </h2>
-            {about.familyOfChurchesParagraphs.map((p, i) => (
-              <p key={i} className="text-gray-600 leading-relaxed mb-4">
-                {p}
-              </p>
-            ))}
-            {about.statementOfFaithUrl && (
-              <div className="mt-6">
-                <a
-                  href={about.statementOfFaithUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center px-5 py-2.5 rounded-full bg-[#1a4731] text-white text-sm font-semibold hover:bg-[#16382a] transition-colors"
-                >
-                  Statement of Faith
-                </a>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-2 gap-12">
+            {about?.missionContent && about.missionContent.length > 0 && (
+              <div>
+                <h2 className="text-2xl font-bold text-[#1a4731] mb-5">Our Mission</h2>
+                <InfoSectionContent blocks={about.missionContent} />
+              </div>
+            )}
+            {about?.familyOfChurchesContent && about.familyOfChurchesContent.length > 0 && (
+              <div>
+                <h2 className="text-2xl font-bold text-[#1a4731] mb-5">
+                  Our Family of Churches
+                </h2>
+                <InfoSectionContent blocks={about.familyOfChurchesContent} />
               </div>
             )}
           </div>
