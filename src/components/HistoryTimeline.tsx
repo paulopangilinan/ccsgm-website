@@ -54,16 +54,16 @@ export default function HistoryTimeline({ items }: { items: TimelineEntry[] }) {
           type="button"
           onClick={() => scrollByAmount(-POINT_GAP * 3)}
           aria-label="Scroll history left"
-          className="shrink-0 w-9 h-9 rounded-full border border-white/30 flex items-center justify-center text-white hover:bg-white/10 transition-colors"
+          className="shrink-0 w-10 h-10 rounded-full border-2 border-gray-300 flex items-center justify-center text-[#1a4731] hover:bg-[#f0fdf4] hover:border-[#52b788] transition-colors"
         >
           <ChevronLeft size={16} />
         </button>
 
         <div ref={scrollRef} className="no-scrollbar overflow-x-auto flex-1">
           <div className="relative flex items-center min-w-max px-6 py-3">
-            <div className="absolute left-6 right-6 h-px bg-white/25" />
+            <div className="absolute left-6 right-6 h-1 rounded-full bg-gray-200" />
             <div
-              className="absolute left-6 h-px bg-[#52b788] transition-all"
+              className="absolute left-6 h-1 rounded-full bg-[#52b788] transition-all"
               style={{ width: filledWidth }}
             />
             {items.map((item) => {
@@ -77,15 +77,15 @@ export default function HistoryTimeline({ items }: { items: TimelineEntry[] }) {
                   style={{ width: POINT_GAP }}
                 >
                   <span
-                    className={`text-xs font-semibold mb-3 transition-colors ${
-                      isActive ? "text-[#52b788]" : "text-white/60"
+                    className={`text-sm font-bold mb-3 transition-colors ${
+                      isActive ? "text-[#52b788]" : "text-gray-500"
                     }`}
                   >
                     {item.year}
                   </span>
                   <span
-                    className={`block rounded-full transition-colors ${
-                      isActive ? "w-3 h-3 bg-[#52b788]" : "w-2.5 h-2.5 bg-white/40 hover:bg-white/70"
+                    className={`block rounded-full ring-4 ring-white transition-colors ${
+                      isActive ? "w-4 h-4 bg-[#52b788]" : "w-3 h-3 bg-gray-300 hover:bg-gray-400"
                     }`}
                   />
                 </button>
@@ -98,7 +98,7 @@ export default function HistoryTimeline({ items }: { items: TimelineEntry[] }) {
           type="button"
           onClick={() => scrollByAmount(POINT_GAP * 3)}
           aria-label="Scroll history right"
-          className="shrink-0 w-9 h-9 rounded-full border border-white/30 flex items-center justify-center text-white hover:bg-white/10 transition-colors"
+          className="shrink-0 w-10 h-10 rounded-full border-2 border-gray-300 flex items-center justify-center text-[#1a4731] hover:bg-[#f0fdf4] hover:border-[#52b788] transition-colors"
         >
           <ChevronRight size={16} />
         </button>
@@ -106,8 +106,8 @@ export default function HistoryTimeline({ items }: { items: TimelineEntry[] }) {
 
       {/* Detail panel for the selected event */}
       <div className="mt-10 max-w-2xl">
-        <p className="text-[#52b788] text-sm font-bold tracking-wide mb-2">{active.year}</p>
-        <p className="text-white/90 leading-relaxed">{active.event}</p>
+        <p className="text-[#52b788] text-3xl font-extrabold tracking-tight mb-3">{active.year}</p>
+        <p className="text-gray-700 text-lg leading-relaxed">{active.event}</p>
         {(active.photo || active.caption) && (
           <div className="mt-5 flex flex-col sm:flex-row gap-4 items-start">
             {active.photo && (
@@ -121,7 +121,7 @@ export default function HistoryTimeline({ items }: { items: TimelineEntry[] }) {
               </div>
             )}
             {active.caption && (
-              <p className="text-white/60 text-sm italic leading-relaxed">{active.caption}</p>
+              <p className="text-gray-400 text-sm italic leading-relaxed">{active.caption}</p>
             )}
           </div>
         )}

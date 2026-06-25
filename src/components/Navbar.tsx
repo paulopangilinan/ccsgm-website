@@ -117,7 +117,7 @@ export default function Navbar({ missionNavItems, programNavItems, projectNavIte
         <div className="flex items-center justify-between h-16">
 
           {/* Logo */}
-          <Link href="/" className="flex min-w-0 flex-1 items-center gap-2 group md:flex-none">
+          <Link href="/" className="flex min-w-0 flex-1 items-center gap-2 group xl:flex-none">
             <Image src="/images/ccsgm-logo.png" alt="CCSGM Logo" width={36} height={36} className="shrink-0 rounded-full" />
             <div className="min-w-0 leading-tight">
               <span className="block max-w-[270px] text-sm font-bold leading-snug text-[#1a4731] tracking-wide sm:max-w-none">
@@ -130,7 +130,7 @@ export default function Navbar({ missionNavItems, programNavItems, projectNavIte
           </Link>
 
           {/* Desktop nav */}
-          <nav className="hidden md:flex items-center gap-6">
+          <nav className="hidden xl:flex items-center gap-6">
             <Link href="/about" className="text-sm font-medium text-gray-600 hover:text-[#1a4731] transition-colors">
               Who We Are
             </Link>
@@ -204,14 +204,14 @@ export default function Navbar({ missionNavItems, programNavItems, projectNavIte
           </nav>
 
           {/* Give CTA */}
-          <div className="hidden md:block">
+          <div className="hidden xl:block">
             <Link href="/give" className="inline-flex items-center px-4 py-2 rounded-full bg-[#52b788] text-white text-sm font-semibold hover:bg-[#3d9971] transition-colors">
               Give
             </Link>
           </div>
 
           {/* Mobile menu button */}
-          <button className="md:hidden flex h-11 w-11 shrink-0 items-center justify-center rounded-md text-gray-600 hover:text-[#1a4731]" onClick={() => setOpen(!open)} aria-label="Toggle menu">
+          <button className="xl:hidden flex h-11 w-11 shrink-0 items-center justify-center rounded-md text-gray-600 hover:text-[#1a4731]" onClick={() => setOpen(!open)} aria-label="Toggle menu">
             {open ? <X size={22} /> : <Menu size={22} />}
           </button>
         </div>
@@ -219,7 +219,7 @@ export default function Navbar({ missionNavItems, programNavItems, projectNavIte
 
       {/* Mobile menu */}
       {open && (
-        <div className="md:hidden border-t border-gray-100 bg-white px-4 pb-4 shadow-sm">
+        <div className="xl:hidden border-t border-gray-100 bg-white px-4 pb-4 shadow-sm">
           <nav className="flex flex-col gap-1 mt-2">
             <Link href="/about" onClick={() => setOpen(false)} className="py-2 text-sm font-medium text-gray-700 hover:text-[#1a4731] transition-colors">
               Who We Are
