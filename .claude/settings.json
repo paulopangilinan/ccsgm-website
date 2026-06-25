@@ -58,7 +58,16 @@
       "Bash(curl -s -o /tmp/about.html http://localhost:3000/about)",
       "Bash(sort -t: -k1 -n)",
       "Bash(curl -s -o /tmp/about2.html http://localhost:3000/about)",
-      "WebFetch(domain:www.flerlagetwins.com)"
+      "WebFetch(domain:www.flerlagetwins.com)",
+      "Bash(rm -rf node_modules)",
+      "Bash(npm ci *)",
+      "Bash(node -e \"console.log\\(require\\('next/package.json'\\).version\\)\")",
+      "Bash(echo \"exit:$?\")",
+      "Bash(ls public/images/hero-headers/)",
+      "Bash(ls public/images/)",
+      "Bash(node scripts/seed-home-page.mjs)",
+      "Bash(rm scripts/seed-home-page.mjs)",
+      "Bash(curl -s -o /tmp/home.html http://localhost:3000/)"
     ],
     "additionalDirectories": [
       "C:\\projects\\ccsgm-website\\src\\app\\(site)\\programs",

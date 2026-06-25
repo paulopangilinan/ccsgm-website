@@ -1,12 +1,24 @@
 import Link from "next/link";
-import { BookOpen, Users, Globe, MapPin, ChevronRight } from "lucide-react";
+import { MapPin, ChevronRight } from "lucide-react";
 import { client } from "@/sanity/client";
 import { urlFor } from "@/sanity/lib/image";
 import FeaturedCarousel, { type FeaturedPost } from "@/components/FeaturedCarousel";
+import { getHomePage, type FeaturedPostRef } from "@/lib/homePage";
+import { getLocationsPage } from "@/lib/locationsPage";
+import { HIGHLIGHT_ICONS } from "@/lib/highlightIcons";
 
 export const revalidate = 60;
 
-type RawPost = FeaturedPost & { mainImage?: { _type: "image"; asset: { _ref: string } } };
+type RawPost = FeaturedPostRef;
+
+function toFeaturedPost(p: RawPost): FeaturedPost {
+  return {
+    ...p,
+    mainImageUrl: p.mainImage
+      ? urlFor(p.mainImage).width(800).height(500).fit("crop").auto("format").url()
+      : undefined,
+  };
+}
 
 function sortAndMap(posts: RawPost[]): FeaturedPost[] {
   posts.sort((a, b) => {
@@ -14,15 +26,10 @@ function sortAndMap(posts: RawPost[]): FeaturedPost[] {
     const db = b.category === "Events" && b.eventDateStart ? b.eventDateStart : b.publishedAt;
     return new Date(db).getTime() - new Date(da).getTime();
   });
-  return posts.map((p) => ({
-    ...p,
-    mainImageUrl: p.mainImage
-      ? urlFor(p.mainImage).width(800).height(500).fit("crop").auto("format").url()
-      : undefined,
-  }));
+  return posts.map(toFeaturedPost);
 }
 
-async function getFeaturedPosts(): Promise<FeaturedPost[]> {
+async function getAutoFeaturedPosts(): Promise<FeaturedPost[]> {
   try {
     const PAST_EVENT_FILTER = `!(category == "Events" && (
       (defined(eventDateEnd) && dateTime(eventDateEnd) < dateTime(now())) ||
@@ -53,67 +60,99 @@ async function getFeaturedPosts(): Promise<FeaturedPost[]> {
   }
 }
 
-
-const highlights = [
+const DEFAULT_HIGHLIGHTS = [
   {
-    icon: BookOpen,
+    icon: "BookOpen",
     title: "Gospel-Centred Preaching",
     body: "Every Sunday we open God's Word and preach Christ crucified — the power of God for salvation.",
   },
   {
-    icon: Users,
+    icon: "Users",
     title: "Community & Discipleship",
     body: "From Sunday School to small groups, we grow together in faith, love, and the knowledge of Christ.",
   },
   {
-    icon: Globe,
+    icon: "Globe",
     title: "Missions & Church Planting",
     body: "We are active in reaching unreached areas across the Philippines, planting new congregations.",
   },
 ];
 
-const locations = [
-  { name: "Kawit, Cavite", schedule: "Sunday 7:30 am & 10:00 am" },
-  { name: "Cavite City", schedule: "Sunday 9:00 am" },
-  { name: "Imus, Cavite", schedule: "Sunday 10:00 am" },
-  { name: "Dasmariñas", schedule: "Sunday 9:00 am" },
-  { name: "Carascal, Surigao del Sur", schedule: "Sunday 8:00 am" },
+const DEFAULT_STORY_PARAGRAPHS = [
+  "CCSGM began in the 1980s as a humble Bible study in Kawit, Cavite. Formally established in 1992, we have grown into a multi-location church planting movement across Cavite and Surigao del Sur.",
+  "In 2018 we were rebranded as Cross of Christ Salvation Gospel Ministries, and in 2022–2023 our senior leadership was ordained within the Sovereign Grace Churches network.",
+];
+
+const DEFAULT_STATS = [
+  { value: "40+", label: "Years of Ministry" },
+  { value: "5", label: "Locations" },
+  { value: "80+", label: "SGC Partner Churches" },
+  { value: "1", label: "Bible Institute" },
 ];
 
 export default async function HomePage() {
-  const featuredPosts = await getFeaturedPosts();
+  const [homePage, locationsPage] = await Promise.all([getHomePage(), getLocationsPage()]);
+
+  const featuredPosts =
+    homePage?.featuredMode === "manual" && homePage.featuredPosts && homePage.featuredPosts.length > 0
+      ? homePage.featuredPosts.map(toFeaturedPost).slice(0, 8)
+      : await getAutoFeaturedPosts();
+
+  const heroImageUrl = homePage?.heroImage
+    ? urlFor(homePage.heroImage).width(1200).height(800).fit("crop").auto("format").url()
+    : undefined;
+
+  const highlights = homePage?.highlights && homePage.highlights.length > 0 ? homePage.highlights : DEFAULT_HIGHLIGHTS;
+  const storyParagraphs =
+    homePage?.storyParagraphs && homePage.storyParagraphs.length > 0
+      ? homePage.storyParagraphs
+      : DEFAULT_STORY_PARAGRAPHS;
+  const stats = homePage?.stats && homePage.stats.length > 0 ? homePage.stats : DEFAULT_STATS;
+  const teaserLocations = (locationsPage?.churches ?? []).slice(0, 5);
+
   return (
     <>
       {/* Carousel — hero slide is always slide 1, featured posts follow */}
-      <FeaturedCarousel posts={featuredPosts} />
+      <FeaturedCarousel
+        posts={featuredPosts}
+        heroImageUrl={heroImageUrl}
+        heroEyebrow={homePage?.heroEyebrow}
+        heroTitle={homePage?.heroTitle}
+        heroSubtitle={homePage?.heroSubtitle}
+        heroPrimaryButton={homePage?.heroPrimaryButton}
+        heroSecondaryButton={homePage?.heroSecondaryButton}
+      />
 
       {/* Highlights */}
       <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14">
             <h2 className="text-3xl font-bold text-[#1a4731] mb-3">
-              What We&apos;re About
+              {homePage?.highlightsTitle || "What We're About"}
             </h2>
             <p className="text-gray-500 max-w-xl mx-auto">
-              We exist to bring people into a real, loving, and personal
-              relationship with Jesus Christ as Lord and Saviour.
+              {homePage?.highlightsSubtitle ||
+                "We exist to bring people into a real, loving, and personal relationship with Jesus Christ as Lord and Saviour."}
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {highlights.map(({ icon: Icon, title, body }) => (
-              <div
-                key={title}
-                className="p-8 rounded-2xl bg-gray-50 hover:shadow-md transition-shadow"
-              >
-                <div className="w-10 h-10 rounded-full bg-[#1a4731] flex items-center justify-center mb-5">
-                  <Icon size={18} className="text-[#52b788]" />
+            {highlights.map(({ icon, title, body }, i) => {
+              const Icon = HIGHLIGHT_ICONS[icon] ?? HIGHLIGHT_ICONS.BookOpen;
+              return (
+                <div
+                  key={i}
+                  className="p-8 rounded-2xl bg-gray-50 hover:shadow-md transition-shadow"
+                >
+                  <div className="w-10 h-10 rounded-full bg-[#1a4731] flex items-center justify-center mb-5">
+                    <Icon size={18} className="text-[#52b788]" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-[#1a4731] mb-2">
+                    {title}
+                  </h3>
+                  <p className="text-gray-500 text-sm leading-relaxed">{body}</p>
                 </div>
-                <h3 className="text-lg font-semibold text-[#1a4731] mb-2">
-                  {title}
-                </h3>
-                <p className="text-gray-500 text-sm leading-relaxed">{body}</p>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
@@ -124,38 +163,27 @@ export default async function HomePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             <div>
               <p className="text-[#52b788] text-sm font-semibold uppercase tracking-widest mb-3">
-                Our Story
+                {homePage?.storyEyebrow || "Our Story"}
               </p>
               <h2 className="text-3xl font-bold text-[#1a4731] mb-5 leading-snug">
-                From a Bible Study to a Movement
+                {homePage?.storyTitle || "From a Bible Study to a Movement"}
               </h2>
-              <p className="text-gray-600 leading-relaxed mb-4">
-                CCSGM began in the 1980s as a humble Bible study in Kawit,
-                Cavite. Formally established in 1992, we have grown into a
-                multi-location church planting movement across Cavite and
-                Surigao del Sur.
-              </p>
-              <p className="text-gray-600 leading-relaxed mb-8">
-                In 2018 we were rebranded as Cross of Christ Salvation Gospel
-                Ministries, and in 2022–2023 our senior leadership was ordained
-                within the Sovereign Grace Churches network.
-              </p>
+              {storyParagraphs.map((p, i) => (
+                <p key={i} className="text-gray-600 leading-relaxed mb-4">
+                  {p}
+                </p>
+              ))}
               <Link
-                href="/about"
+                href={homePage?.storyLink?.url || "/about"}
                 className="inline-flex items-center gap-1 text-[#1a4731] font-semibold text-sm hover:text-[#52b788] transition-colors"
               >
-                Read our full story <ChevronRight size={16} />
+                {homePage?.storyLink?.label || "Read our full story"} <ChevronRight size={16} />
               </Link>
             </div>
             <div className="grid grid-cols-2 gap-4 text-center">
-              {[
-                { value: "40+", label: "Years of Ministry" },
-                { value: "5", label: "Locations" },
-                { value: "80+", label: "SGC Partner Churches" },
-                { value: "1", label: "Bible Institute" },
-              ].map(({ value, label }) => (
+              {stats.map(({ value, label }, i) => (
                 <div
-                  key={label}
+                  key={i}
                   className="p-6 rounded-2xl bg-[#1a4731] text-white"
                 >
                   <p className="text-3xl font-bold text-[#52b788]">{value}</p>
@@ -173,23 +201,23 @@ export default async function HomePage() {
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-10">
             <div>
               <p className="text-[#52b788] text-sm font-semibold uppercase tracking-widest mb-2">
-                Worship With Us
+                {homePage?.locationsEyebrow || "Worship With Us"}
               </p>
               <h2 className="text-3xl font-bold text-[#1a4731]">
-                Find a Location Near You
+                {homePage?.locationsTitle || "Find a Location Near You"}
               </h2>
             </div>
             <Link
               href="/locations"
               className="inline-flex items-center gap-1 text-[#1a4731] font-semibold text-sm hover:text-[#52b788] transition-colors shrink-0"
             >
-              All locations <ChevronRight size={16} />
+              {homePage?.locationsLinkLabel || "All locations"} <ChevronRight size={16} />
             </Link>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {locations.map(({ name, schedule }) => (
+            {teaserLocations.map(({ _key, name, schedule }) => (
               <div
-                key={name}
+                key={_key}
                 className="flex items-start gap-3 p-5 rounded-xl border border-gray-100 hover:border-[#52b788]/40 hover:shadow-sm transition-all"
               >
                 <MapPin size={18} className="text-[#52b788] mt-0.5 shrink-0" />
@@ -203,23 +231,21 @@ export default async function HomePage() {
         </div>
       </section>
 
-
       {/* CTA banner */}
       <section className="py-20 bg-[#52b788]">
         <div className="max-w-3xl mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold text-white mb-4">
-            Partner With the Great Commission
+            {homePage?.ctaTitle || "Partner With the Great Commission"}
           </h2>
           <p className="text-white/80 leading-relaxed mb-8">
-            Your generosity fuels church planting, the Ergartes Bible
-            Institute, and missions to unreached communities across the
-            Philippines.
+            {homePage?.ctaBody ||
+              "Your generosity fuels church planting, the Ergartes Bible Institute, and missions to unreached communities across the Philippines."}
           </p>
           <Link
-            href="/give"
+            href={homePage?.ctaButton?.url || "/give"}
             className="inline-flex items-center px-8 py-3 rounded-full bg-[#1a4731] text-white font-semibold hover:bg-[#1a4731] transition-colors"
           >
-            Give Today
+            {homePage?.ctaButton?.label || "Give Today"}
           </Link>
         </div>
       </section>

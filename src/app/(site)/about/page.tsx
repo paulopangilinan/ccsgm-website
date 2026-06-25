@@ -60,9 +60,9 @@ export default async function AboutPage() {
 
       {/* Timeline */}
       {about?.timeline && about.timeline.length > 0 && (
-        <section className="py-20 bg-[#1a4731]">
+        <section className="py-20 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-2xl font-bold text-white mb-10">Our History</h2>
+            <h2 className="text-2xl font-bold text-[#1a4731] mb-10">Our History</h2>
             <HistoryTimeline items={about.timeline} />
           </div>
         </section>
@@ -71,7 +71,7 @@ export default async function AboutPage() {
       {/* Mission + Family of Churches — side by side on desktop */}
       {((about?.missionContent && about.missionContent.length > 0) ||
         (about?.familyOfChurchesContent && about.familyOfChurchesContent.length > 0)) && (
-        <section className="py-20 bg-white">
+        <section className="py-20 bg-[#f0fdf4]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-2 gap-12">
             {about?.missionContent && about.missionContent.length > 0 && (
               <div>
@@ -93,7 +93,7 @@ export default async function AboutPage() {
 
       {/* Shared Values */}
       {about?.values && about.values.length > 0 && (
-        <section className="py-20 bg-[#f0fdf4]">
+        <section className="py-20 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <h2 className="text-2xl font-bold text-[#1a4731] mb-10">
               Our Shared Values
@@ -102,7 +102,7 @@ export default async function AboutPage() {
               {about.values.map(({ _key, title, body }) => (
                 <div
                   key={_key}
-                  className="p-6 bg-white rounded-2xl border border-gray-100"
+                  className="p-6 bg-[#f0fdf4] rounded-2xl border border-gray-100"
                 >
                   <div className="flex items-start gap-3 mb-3">
                     <CheckCircle
@@ -125,12 +125,12 @@ export default async function AboutPage() {
 
       {/* Leadership */}
       {about?.leaders && about.leaders.length > 0 && (
-        <section className="py-20 bg-white">
+        <section className="py-20 bg-[#f0fdf4]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <h2 className="text-2xl font-bold text-[#1a4731] mb-10">Leadership</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {about.leaders.map(({ _key, name, role, bio, photo }) => (
-                <div key={_key} className="p-7 bg-[#f0fdf4] rounded-2xl border border-gray-100">
+                <div key={_key} className="p-7 bg-white rounded-2xl border border-gray-100">
                   <div className="flex flex-col items-center sm:flex-row sm:items-center gap-4 mb-3">
                     {photo ? (
                       <div className="relative w-16 h-16 rounded-full overflow-hidden shrink-0">

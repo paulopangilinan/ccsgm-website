@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { Fragment, useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight, Calendar, Home } from "lucide-react";
@@ -19,6 +19,8 @@ export type FeaturedPost = {
   eventDateEnd?: string;
   mainImageUrl?: string;
 };
+
+type LinkButton = { label: string; url: string };
 
 type HeroSlide = { type: "hero" };
 type PostSlide = { type: "post"; post: FeaturedPost };
@@ -82,7 +84,24 @@ function Controls({
   );
 }
 
-export default function FeaturedCarousel({ posts }: { posts: FeaturedPost[] }) {
+export default function FeaturedCarousel({
+  posts,
+  heroImageUrl,
+  heroEyebrow = "Part of Sovereign Grace Churches",
+  heroTitle = "Bringing the Gospel\nto Every Nation",
+  heroSubtitle = "Cross of Christ Salvation Gospel Ministries is a Christian Evangelical Church in the Philippines, passionate about the Great Commission — church planting, missions, and equipping believers.",
+  heroPrimaryButton = { label: "Find a Location", url: "/locations" },
+  heroSecondaryButton = { label: "Watch Sermons", url: "/sermons" },
+}: {
+  posts: FeaturedPost[];
+  heroImageUrl?: string;
+  heroEyebrow?: string;
+  heroTitle?: string;
+  heroSubtitle?: string;
+  heroPrimaryButton?: LinkButton;
+  heroSecondaryButton?: LinkButton;
+}) {
+  const heroTitleLines = heroTitle.split("\n");
   const slides: Slide[] = [
     { type: "hero" },
     ...posts.map((p): PostSlide => ({ type: "post", post: p })),
@@ -109,33 +128,56 @@ export default function FeaturedCarousel({ posts }: { posts: FeaturedPost[] }) {
   if (slide.type === "hero") {
     return (
       <section className="relative bg-[#1a4731] text-white overflow-hidden" style={{ height: "520px" }}>
+        {heroImageUrl && (
+          <>
+            <div className="absolute top-0 right-0 h-full w-full md:w-3/4">
+              <Image
+                src={heroImageUrl}
+                alt=""
+                fill
+                className="object-cover object-center"
+                sizes="100vw"
+                priority
+              />
+            </div>
+            <div
+              className="absolute inset-0"
+              style={{
+                background:
+                  "linear-gradient(to right, #1a4731 40%, #1a4731ee 55%, #1a473199 70%, transparent 100%)",
+              }}
+            />
+          </>
+        )}
         <div className="absolute inset-0 z-10 flex items-center">
           <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="max-w-3xl">
               <p className="text-[#52b788] text-sm font-semibold uppercase tracking-widest mb-4">
-                Part of Sovereign Grace Churches
+                {heroEyebrow}
               </p>
               <h1 className="text-3xl md:text-4xl font-bold leading-tight mb-4">
-                Bringing the Gospel <br className="hidden sm:block" />
-                to Every Nation
+                {heroTitleLines.map((line, i) => (
+                  <Fragment key={i}>
+                    {line}
+                    {i < heroTitleLines.length - 1 && <br className="hidden sm:block" />}
+                  </Fragment>
+                ))}
               </h1>
               <p className="text-gray-300 text-lg max-w-xl leading-relaxed mb-8">
-                Cross of Christ Salvation Gospel Ministries is a Christian
-                Evangelical Church in the Philippines, passionate about the Great
-                Commission — church planting, missions, and equipping believers.
+                {heroSubtitle}
               </p>
               <div className="flex flex-col sm:flex-row gap-4 mb-8">
                 <Link
-                  href="/locations"
+                  href={heroPrimaryButton.url}
                   className="inline-flex items-center justify-center px-6 py-3 rounded-full bg-[#52b788] text-white font-semibold hover:bg-[#3d9971] transition-colors"
                 >
-                  Find a Location
+                  {heroPrimaryButton.label}
                 </Link>
                 <Link
-                  href="/sermons"
+                  href={heroSecondaryButton.url}
                   className="inline-flex items-center justify-center px-6 py-3 rounded-full border border-white/30 text-white font-semibold hover:bg-white/10 transition-colors"
                 >
-                  Watch Sermons
+                  {heroSecondaryButton.label}
                 </Link>
               </div>
               <Controls slides={slides} current={current} setCurrent={setCurrent} prev={prev} next={next} />
