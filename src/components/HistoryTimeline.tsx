@@ -145,7 +145,7 @@ export default function HistoryTimeline({ items }: { items: TimelineEntry[] }) {
         {(active.photo || active.caption) && (
           <div className="mt-5 flex flex-col sm:flex-row gap-4 items-start">
             {active.photo && (
-              <div className="relative w-full aspect-video sm:w-48 sm:aspect-auto sm:h-32 rounded-lg overflow-hidden shrink-0">
+              <div className="relative w-full aspect-video sm:w-48 sm:aspect-auto sm:h-32 rounded-md overflow-hidden shrink-0">
                 <Image
                   src={urlFor(active.photo).width(480).height(320).fit("crop").auto("format").url()}
                   alt={active.year}

@@ -25,7 +25,6 @@ export default async function MissionPage({
       slug={slug}
       postCategory="Missions"
       postSubField="subCategory"
-      updatesLabel="Missions"
     />
   );
 }

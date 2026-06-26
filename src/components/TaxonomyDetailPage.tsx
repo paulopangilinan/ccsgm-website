@@ -13,7 +13,6 @@ type Props = {
   slug: string;
   postCategory: string;
   postSubField: "subCategory" | "programSubCategory" | "projectSubCategory";
-  updatesLabel: string;
 };
 
 // Pulls posts that either belong to this item via the reference field, or
@@ -34,7 +33,7 @@ async function getRelatedPosts(postCategory: string, postSubField: string, itemI
   }
 }
 
-export default async function TaxonomyDetailPage({ type, slug, postCategory, postSubField, updatesLabel }: Props) {
+export default async function TaxonomyDetailPage({ type, slug, postCategory, postSubField }: Props) {
   const item = await getTaxonomyItemBySlug(type, slug);
   if (!item) notFound();
 
@@ -64,12 +63,7 @@ export default async function TaxonomyDetailPage({ type, slug, postCategory, pos
       <section className="py-20 bg-[#f0fdf4]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-10">
-            <p className="text-[#52b788] text-sm font-semibold uppercase tracking-widest mb-2">
-              {updatesLabel}
-            </p>
-            <h2 className="text-3xl font-bold text-[#1a4731]">
-              {item.title} Updates
-            </h2>
+            <h2 className="text-3xl font-bold text-[#1a4731]">Related Articles</h2>
           </div>
           <PostGrid
             posts={posts}

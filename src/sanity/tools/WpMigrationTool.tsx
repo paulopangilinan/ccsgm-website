@@ -249,15 +249,17 @@ export default function WpMigrationTool() {
     <div style={styles.page}>
       <h1 style={styles.h1}>WordPress Migration</h1>
       <p style={styles.sub}>
-        Paste a category archive URL (e.g. https://ccs-gm.co/category/pastors-devotion/), pick which
-        articles to bring over, choose the destination category, and migrate. Articles are created as
-        drafts — review and publish them in Articles afterward.
+        Paste a category archive URL (e.g. https://ccs-gm.co/category/pastors-devotion/) to bring over
+        every article in that category, or paste a single article&apos;s URL (e.g.
+        https://ccs-gm.co/happy-lambs-are-healthy-lambs/) to migrate just that one. Either way, pick the
+        destination category and migrate. Articles are created as drafts — review and publish them in
+        Articles afterward.
       </p>
 
       <div style={styles.row}>
         <input
           style={styles.input}
-          placeholder="https://ccs-gm.co/category/pastors-devotion/"
+          placeholder="Category URL or a single article URL"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
         />

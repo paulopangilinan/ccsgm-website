@@ -4,7 +4,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState, useRef } from "react";
-import { Menu, X, ChevronDown, ChevronRight } from "lucide-react";
+import { Menu, X, ChevronDown, ChevronRight, Search } from "lucide-react";
+import SearchOverlay from "@/components/SearchOverlay";
 
 type NavLinkItem = {
   title: string;
@@ -34,6 +35,7 @@ const links = [
 
 export default function Navbar({ missionNavItems, programNavItems, projectNavItems }: NavbarProps) {
   const [open, setOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [preachingOpen, setPreachingOpen] = useState(false);
   const preachingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [passionOpen, setPassionOpen] = useState(false);
@@ -225,6 +227,14 @@ export default function Navbar({ missionNavItems, programNavItems, projectNavIte
                 {l.label}
               </Link>
             ))}
+
+            <button
+              onClick={() => setSearchOpen(true)}
+              aria-label="Search"
+              className="text-gray-500 hover:text-[#1a4731] transition-colors"
+            >
+              <Search size={18} />
+            </button>
           </nav>
         </div>
       </div>
@@ -314,12 +324,23 @@ export default function Navbar({ missionNavItems, programNavItems, projectNavIte
                 {l.label}
               </Link>
             ))}
+            <button
+              onClick={() => {
+                setOpen(false);
+                setSearchOpen(true);
+              }}
+              className="flex items-center gap-2 py-2 text-sm font-medium text-gray-600 hover:text-[#1a4731] transition-colors"
+            >
+              <Search size={16} /> Search
+            </button>
             <Link href="/give" onClick={() => setOpen(false)} className="mt-2 inline-flex items-center justify-center px-4 py-2.5 rounded-full bg-[#52b788] text-white text-sm font-semibold hover:bg-[#3d9971] transition-colors">
               Give
             </Link>
           </nav>
         </div>
       )}
+
+      <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
     </header>
   );
 }

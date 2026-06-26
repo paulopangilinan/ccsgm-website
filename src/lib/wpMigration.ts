@@ -33,8 +33,20 @@ type Segment = { type: "text"; text: string; marks: string[]; linkHref?: string 
 function collectInline(node: Node, marks: string[], linkHref: string | undefined, out: Segment[]) {
   for (const child of Array.from(node.childNodes)) {
     if (child.nodeType === 3) {
-      const text = child.textContent;
-      if (text) out.push({ type: "text", text, marks: [...marks], linkHref });
+      const raw = child.textContent ?? "";
+      if (raw.trim() === "") {
+        // Pure formatting whitespace between sibling tags, not real content.
+        // A newline among it means these siblings were meant to be on
+        // separate lines — this shows up when WP content has no <p>/<br>
+        // structure at all, just bare text nodes separated by raw newlines.
+        // Treat that as a paragraph break. Without a newline it's just
+        // inter-tag indentation with no meaning, so drop it rather than
+        // keep it as a literal span (which renders as a stray collapsed
+        // space — exactly the "wall of spaces" bug this fixes).
+        if (raw.includes("\n")) out.push({ type: "br" });
+        continue;
+      }
+      out.push({ type: "text", text: raw, marks: [...marks], linkHref });
       continue;
     }
     if (child.nodeType !== 1) continue;
@@ -174,6 +186,46 @@ export async function resolveCategoryFromUrl(categoryUrl: string): Promise<{
     throw new Error(`No category found with slug "${slug}" on ${siteUrl}`);
   }
   return { siteUrl, categoryId: cats[0].id, categoryName: cats[0].name };
+}
+
+// A WP permalink for a single post (e.g. https://ccs-gm.co/happy-lambs-are-healthy-lambs/)
+// has no "/category/" segment — that's what tells it apart from a category
+// archive URL pasted into the same box.
+export function isSinglePostUrl(rawUrl: string): boolean {
+  const parts = new URL(rawUrl).pathname.split("/").filter(Boolean);
+  return parts.length > 0 && parts[0] !== "category";
+}
+
+export async function resolvePostFromUrl(postUrl: string): Promise<{
+  siteUrl: string;
+  post: WpListItem;
+}> {
+  const url = new URL(postUrl);
+  assertAllowedHost(url.hostname);
+  const siteUrl = `${url.protocol}//${url.host}`;
+  const parts = url.pathname.split("/").filter(Boolean);
+  const slug = parts[parts.length - 1];
+
+  const res = await fetch(
+    `${siteUrl}/wp-json/wp/v2/posts?slug=${encodeURIComponent(slug)}&_fields=id,title,link,date,excerpt,slug`
+  );
+  if (!res.ok) throw new Error(`Could not reach WordPress REST API at ${siteUrl}`);
+  const data = await res.json();
+  if (!Array.isArray(data) || data.length === 0) {
+    throw new Error(`No article found with slug "${slug}" on ${siteUrl}`);
+  }
+  const p = data[0];
+  return {
+    siteUrl,
+    post: {
+      wpId: p.id,
+      title: stripTags(p.title?.rendered ?? ""),
+      link: p.link,
+      date: p.date,
+      excerpt: stripTags(p.excerpt?.rendered ?? "").slice(0, 160),
+      slug: p.slug,
+    },
+  };
 }
 
 function getSanityClient(token: string) {
@@ -378,6 +430,29 @@ export async function migrateWpPost(
   let bodyTextForExcerpt = "";
   let detectedAuthor: string | undefined;
 
+  // Shared by every code path that turns an element into blocks (<p>, and
+  // the generic div/other fallback below) — content without proper <p>
+  // wrapping was previously skipping this entirely, leaving the excerpt
+  // empty even though the post clearly had a body.
+  function detectAuthorAndExcerpt(newBlocks: Block[]) {
+    for (const b of newBlocks) {
+      const lineText = b.children.map((c) => c.text).join("").trim();
+      if (!detectedAuthor) {
+        // "By: NAME" (colon) is an unambiguous byline. A bare "by " needs a
+        // capitalized word immediately after (a name, not a sentence like
+        // "By doing so, ...") and no comma — names don't have commas, but
+        // plenty of ordinary sentences that happen to start with "by" do.
+        const m =
+          lineText.match(/^by:\s*([^,]{2,40})$/i) ||
+          lineText.match(/^by\s+([A-Z][^,]{1,28})$/);
+        if (m && m[1].trim().split(/\s+/).length <= 6) detectedAuthor = m[1].trim();
+      }
+      if (!bodyTextForExcerpt && lineText.length > 60 && !META_LINE.test(lineText)) {
+        bodyTextForExcerpt = lineText;
+      }
+    }
+  }
+
   // Six or more images in a row with no text between them read better as one
   // gallery than as a wall of full-width images — these buffer until the run
   // breaks (any non-image-only element), then flush as a gallery (>=6) or as
@@ -457,22 +532,7 @@ export async function migrateWpPost(
       if (!text) continue;
       flushGallery();
       const newBlocks = paragraphToBlocks(el);
-      for (const b of newBlocks) {
-        const lineText = b.children.map((c) => c.text).join("").trim();
-        if (!detectedAuthor) {
-          // "By: NAME" (colon) is an unambiguous byline. A bare "by " needs a
-          // capitalized word immediately after (a name, not a sentence like
-          // "By doing so, ...") and no comma — names don't have commas, but
-          // plenty of ordinary sentences that happen to start with "by" do.
-          const m =
-            lineText.match(/^by:\s*([^,]{2,40})$/i) ||
-            lineText.match(/^by\s+([A-Z][^,]{1,28})$/);
-          if (m && m[1].trim().split(/\s+/).length <= 6) detectedAuthor = m[1].trim();
-        }
-        if (!bodyTextForExcerpt && lineText.length > 60 && !META_LINE.test(lineText)) {
-          bodyTextForExcerpt = lineText;
-        }
-      }
+      detectAuthorAndExcerpt(newBlocks);
       blocks.push(...newBlocks);
       continue;
     }
@@ -504,7 +564,9 @@ export async function migrateWpPost(
     const text = plainText(el);
     if (text) {
       flushGallery();
-      blocks.push(...paragraphToBlocks(el));
+      const newBlocks = paragraphToBlocks(el);
+      detectAuthorAndExcerpt(newBlocks);
+      blocks.push(...newBlocks);
     }
   }
   flushGallery();
