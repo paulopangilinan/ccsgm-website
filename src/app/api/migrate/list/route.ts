@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { resolveCategoryFromUrl, listPostsInCategory, markAlreadyMigrated } from "@/lib/wpMigration";
+import {
+  resolveCategoryFromUrl,
+  listPostsInCategory,
+  markAlreadyMigrated,
+  isSinglePostUrl,
+  resolvePostFromUrl,
+} from "@/lib/wpMigration";
 
 export const maxDuration = 60;
 
@@ -20,6 +26,12 @@ export async function GET(req: NextRequest) {
   }
 
   try {
+    if (isSinglePostUrl(url)) {
+      const { siteUrl, post } = await resolvePostFromUrl(url);
+      const posts = await markAlreadyMigrated([post]);
+      return NextResponse.json({ siteUrl, categoryName: "Single article", posts });
+    }
+
     const { siteUrl, categoryId, categoryName } = await resolveCategoryFromUrl(url);
     const rawPosts = await listPostsInCategory(siteUrl, categoryId);
     const posts = await markAlreadyMigrated(rawPosts);

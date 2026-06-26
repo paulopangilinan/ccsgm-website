@@ -25,7 +25,6 @@ export default async function ProgramPage({
       slug={slug}
       postCategory="Programs"
       postSubField="programSubCategory"
-      updatesLabel="Programs"
     />
   );
 }

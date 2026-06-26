@@ -14,6 +14,7 @@ import {schema} from './src/sanity/schemaTypes'
 import {structure} from './src/sanity/structure'
 import {templates} from './src/sanity/templates'
 import WpMigrationTool from './src/sanity/tools/WpMigrationTool'
+import StudioNavbar from './src/sanity/components/StudioNavbar'
 
 export default defineConfig({
   basePath: '/studio',
@@ -26,6 +27,11 @@ export default defineConfig({
   document: {
     comments: {
       enabled: false,
+    },
+  },
+  studio: {
+    components: {
+      navbar: StudioNavbar,
     },
   },
   releases: {
