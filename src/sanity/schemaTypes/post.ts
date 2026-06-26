@@ -134,8 +134,66 @@ export const postType = defineType({
       type: "array",
       of: bodyBlocks,
     }),
+
+    // --- Set automatically by the "Share Your Story" public submission
+    // form — not meant to be filled in manually when creating a post.
+    defineField({
+      name: "isVisitorSubmission",
+      title: "Visitor Submission",
+      type: "boolean",
+      description: "Set automatically when this draft came in through the \"Share Your Story\" page.",
+      initialValue: false,
+      readOnly: true,
+    }),
+    defineField({
+      name: "submissionStoryType",
+      title: "Story Type (as submitted)",
+      type: "string",
+      options: {
+        list: [
+          "Testimony",
+          "Devotion",
+          "Praise Report",
+          "Prayer Request",
+          "Salvation Story",
+          "Missions Update",
+          "Other",
+        ],
+      },
+      hidden: ({ document }) => !document?.isVisitorSubmission,
+      readOnly: true,
+    }),
+    defineField({
+      name: "submitterName",
+      title: "Submitted By",
+      type: "string",
+      hidden: ({ document }) => !document?.isVisitorSubmission,
+      readOnly: true,
+    }),
+    defineField({
+      name: "submitterEmail",
+      title: "Submitter Email",
+      type: "string",
+      hidden: ({ document }) => !document?.isVisitorSubmission,
+      readOnly: true,
+    }),
+    defineField({
+      name: "submittedVideoUrl",
+      title: "Submitted Video Link",
+      type: "url",
+      description: "Also added to the Body above — as a YouTube embed if it's a YouTube link, otherwise a plain link.",
+      hidden: ({ document }) => !document?.isVisitorSubmission,
+      readOnly: true,
+    }),
   ],
   preview: {
-    select: { title: "title", media: "mainImage" },
+    select: { title: "title", media: "mainImage", isVisitorSubmission: "isVisitorSubmission", storyType: "submissionStoryType" },
+    prepare({ title, media, isVisitorSubmission, storyType }) {
+      return {
+        title: isVisitorSubmission ? `📬 ${title}` : title,
+        subtitle: isVisitorSubmission ? `Visitor submission — ${storyType ?? "Story"}` : undefined,
+        media,
+      };
+    },
   },
 });

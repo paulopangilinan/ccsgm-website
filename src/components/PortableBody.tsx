@@ -6,15 +6,9 @@ import PdfBlock from "@/components/PdfBlock";
 import GalleryLightbox from "@/components/GalleryLightbox";
 import PlaylistBlock from "@/components/PlaylistBlock";
 import { getPlaylistVideos, type YouTubeVideo } from "@/lib/youtube";
+import { getYouTubeId } from "@/lib/youtubeId";
 
 type SanityImage = { _type: "image"; asset: { _ref: string } };
-
-function getYouTubeId(url: string): string | null {
-  const match = url.match(
-    /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
-  );
-  return match ? match[1] : null;
-}
 
 /**
  * Renders a Sanity portable-text body with every shared block type (image,

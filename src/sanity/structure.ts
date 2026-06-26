@@ -46,6 +46,17 @@ export const structure: StructureResolver = (S) =>
     .title("CCSGM")
     .items([
       S.listItem()
+        .title("📬 Story Submissions")
+        .child(
+          S.documentList()
+            .title("Story Submissions")
+            .filter(`_type == "post" && isVisitorSubmission == true`)
+            .defaultOrdering([{ field: "publishedAt", direction: "desc" }])
+        ),
+
+      S.divider(),
+
+      S.listItem()
         .title("Home Page")
         .id("home-page")
         .child(S.document().schemaType("homePage").documentId("home-page")),
@@ -104,36 +115,47 @@ export const structure: StructureResolver = (S) =>
             ])
         ),
 
+      // Grouped together to mirror the "Our Passion" dropdown in the site's
+      // own nav (see src/components/Navbar.tsx) — one fewer top-level item
+      // to scroll past, and one fewer pane open by default while browsing.
       S.listItem()
-        .title("Missions")
+        .title("Our Passion")
         .child(
           S.list()
-            .title("Missions")
+            .title("Our Passion")
             .items([
-              S.documentTypeListItem("mission").title("Missions"),
-              postsByCategory(S, "Articles", `category == "Missions"`, "post-missions"),
-            ])
-        ),
+              S.listItem()
+                .title("Missions")
+                .child(
+                  S.list()
+                    .title("Missions")
+                    .items([
+                      S.documentTypeListItem("mission").title("Missions"),
+                      postsByCategory(S, "Articles", `category == "Missions"`, "post-missions"),
+                    ])
+                ),
 
-      S.listItem()
-        .title("Programs")
-        .child(
-          S.list()
-            .title("Programs")
-            .items([
-              S.documentTypeListItem("program").title("Programs"),
-              postsByCategory(S, "Articles", `category == "Programs"`, "post-programs"),
-            ])
-        ),
+              S.listItem()
+                .title("Programs")
+                .child(
+                  S.list()
+                    .title("Programs")
+                    .items([
+                      S.documentTypeListItem("program").title("Programs"),
+                      postsByCategory(S, "Articles", `category == "Programs"`, "post-programs"),
+                    ])
+                ),
 
-      S.listItem()
-        .title("Projects")
-        .child(
-          S.list()
-            .title("Projects")
-            .items([
-              S.documentTypeListItem("project").title("Projects"),
-              postsByCategory(S, "Articles", `category == "Projects"`, "post-projects"),
+              S.listItem()
+                .title("Projects")
+                .child(
+                  S.list()
+                    .title("Projects")
+                    .items([
+                      S.documentTypeListItem("project").title("Projects"),
+                      postsByCategory(S, "Articles", `category == "Projects"`, "post-projects"),
+                    ])
+                ),
             ])
         ),
 

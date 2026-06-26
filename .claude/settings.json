@@ -67,7 +67,11 @@
       "Bash(ls public/images/)",
       "Bash(node scripts/seed-home-page.mjs)",
       "Bash(rm scripts/seed-home-page.mjs)",
-      "Bash(curl -s -o /tmp/home.html http://localhost:3000/)"
+      "Bash(curl -s -o /tmp/home.html http://localhost:3000/)",
+      "Bash(curl -s -o /tmp/share.html -w \"HTTP:%{http_code}\\\\n\" http://localhost:3000/share-your-story)",
+      "Bash(grep -c \"^TURNSTILE_SECRET_KEY=.\\\\+$\\\\|^GMAIL_USER=.\\\\+$\\\\|^GMAIL_APP_PASSWORD=.\\\\+$\" .env.local)",
+      "Bash(curl -s -o /tmp/submit-result.json -w 'HTTP:%{http_code}\\\\n' -X POST http://localhost:3001/api/share-story -F 'name=Test Visitor' -F email=test@example.com -F storyType=Testimony -F 'title=__TEST__ Verify Submission Flow' -F 'story=This is a test submission to verify the share-story flow end to end. It should create a draft post in Sanity.' -F videoUrl=https://www.youtube.com/watch?v=dQw4w9WgXcQ)",
+      "Bash(curl -s -o /tmp/submit2.json -w 'HTTP:%{http_code}\\\\n' -X POST http://localhost:3001/api/share-story -F 'name=Rich Test' -F storyType=Devotion -F 'title=__TEST__ Rich Text Conversion' -F 'storyText=My Testimony *)"
     ],
     "additionalDirectories": [
       "C:\\projects\\ccsgm-website\\src\\app\\(site)\\programs",

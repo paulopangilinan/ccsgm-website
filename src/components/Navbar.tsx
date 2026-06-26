@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { useState, useRef } from "react";
 import { Menu, X, ChevronDown, ChevronRight } from "lucide-react";
 
@@ -27,6 +28,7 @@ const preachingLinks = [
 const links = [
   { href: "/locations", label: "Locations" },
   { href: "/news", label: "News & Events" },
+  { href: "/share-your-story", label: "Share Your Story" },
   { href: "/contact", label: "Contact" },
 ];
 
@@ -95,6 +97,16 @@ export default function Navbar({ missionNavItems, programNavItems, projectNavIte
     projectsTimer.current = setTimeout(() => setProjectsOpen(false), 150);
   }
 
+  const pathname = usePathname();
+  function isActive(href: string) {
+    return pathname === href || pathname.startsWith(`${href}/`);
+  }
+  function navLinkClass(active: boolean) {
+    return `text-sm font-medium transition-colors ${active ? "text-[#52b788] font-semibold" : "text-gray-600 hover:text-[#1a4731]"}`;
+  }
+  const preachingActive = preachingLinks.some((l) => isActive(l.href));
+  const passionActive = ["/programs", "/missions", "/projects"].some((p) => isActive(p));
+
   const dropdownItem = "block px-4 py-2 text-sm text-gray-600 hover:bg-[#f0fdf4] hover:text-[#1a4731] transition-colors";
   const dropdownAllItem = "block px-4 py-2 text-sm font-semibold text-[#1a4731] hover:bg-[#f0fdf4] transition-colors border-t border-gray-100";
 
@@ -114,13 +126,13 @@ export default function Navbar({ missionNavItems, programNavItems, projectNavIte
   return (
     <header className="sticky top-0 z-50 bg-white border-b border-gray-100 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
 
-          {/* Logo */}
-          <Link href="/" className="flex min-w-0 flex-1 items-center gap-2 group xl:flex-none">
+        {/* Brand row */}
+        <div className="flex items-center justify-between h-16 xl:h-auto xl:py-4">
+          <Link href="/" className="flex min-w-0 items-center gap-2 group">
             <Image src="/images/ccsgm-logo.png" alt="CCSGM Logo" width={36} height={36} className="shrink-0 rounded-full" />
             <div className="min-w-0 leading-tight">
-              <span className="block max-w-[270px] text-sm font-bold leading-snug text-[#1a4731] tracking-wide sm:max-w-none">
+              <span className="block max-w-[270px] text-sm font-bold leading-snug text-[#1a4731] tracking-wide sm:max-w-none xl:text-base">
                 Cross of Christ Salvation Gospel Ministries (CCSGM)
               </span>
               <span className="hidden sm:block text-[10px] text-gray-400 tracking-wider uppercase">
@@ -129,15 +141,27 @@ export default function Navbar({ missionNavItems, programNavItems, projectNavIte
             </div>
           </Link>
 
-          {/* Desktop nav */}
-          <nav className="hidden xl:flex items-center gap-6">
-            <Link href="/about" className="text-sm font-medium text-gray-600 hover:text-[#1a4731] transition-colors">
+          {/* Give CTA — sits in the header above the nav row, not crowded among the nav links */}
+          <Link href="/give" className="hidden xl:inline-flex items-center px-4 py-2 rounded-full bg-[#52b788] text-white text-sm font-semibold hover:bg-[#3d9971] transition-colors shrink-0">
+            Give
+          </Link>
+
+          {/* Mobile menu button */}
+          <button className="xl:hidden flex h-11 w-11 shrink-0 items-center justify-center rounded-md text-gray-600 hover:text-[#1a4731]" onClick={() => setOpen(!open)} aria-label="Toggle menu">
+            {open ? <X size={22} /> : <Menu size={22} />}
+          </button>
+        </div>
+
+        {/* Nav row — desktop only; logo/title row above keeps this from feeling crowded */}
+        <div className="hidden xl:flex items-center justify-end border-t border-gray-100 py-2.5">
+          <nav className="flex items-center gap-6">
+            <Link href="/about" className={navLinkClass(isActive("/about"))}>
               Who We Are
             </Link>
 
             {/* Preaching dropdown */}
             <div className="relative" onMouseEnter={showPreaching} onMouseLeave={hidePreaching}>
-              <button className="flex items-center gap-1 text-sm font-medium text-gray-600 hover:text-[#1a4731] transition-colors">
+              <button className={`flex items-center gap-1 ${navLinkClass(preachingActive)}`}>
                 Preaching <ChevronDown size={14} />
               </button>
               {preachingOpen && (
@@ -151,7 +175,7 @@ export default function Navbar({ missionNavItems, programNavItems, projectNavIte
 
             {/* Our Passion dropdown */}
             <div className="relative" onMouseEnter={showPassion} onMouseLeave={hidePassion}>
-              <button className="flex items-center gap-1 text-sm font-medium text-gray-600 hover:text-[#1a4731] transition-colors">
+              <button className={`flex items-center gap-1 ${navLinkClass(passionActive)}`}>
                 Our Passion <ChevronDown size={14} />
               </button>
               {passionOpen && (
@@ -197,23 +221,11 @@ export default function Navbar({ missionNavItems, programNavItems, projectNavIte
             </div>
 
             {links.map((l) => (
-              <Link key={l.href} href={l.href} className="text-sm font-medium text-gray-600 hover:text-[#1a4731] transition-colors">
+              <Link key={l.href} href={l.href} className={navLinkClass(isActive(l.href))}>
                 {l.label}
               </Link>
             ))}
           </nav>
-
-          {/* Give CTA */}
-          <div className="hidden xl:block">
-            <Link href="/give" className="inline-flex items-center px-4 py-2 rounded-full bg-[#52b788] text-white text-sm font-semibold hover:bg-[#3d9971] transition-colors">
-              Give
-            </Link>
-          </div>
-
-          {/* Mobile menu button */}
-          <button className="xl:hidden flex h-11 w-11 shrink-0 items-center justify-center rounded-md text-gray-600 hover:text-[#1a4731]" onClick={() => setOpen(!open)} aria-label="Toggle menu">
-            {open ? <X size={22} /> : <Menu size={22} />}
-          </button>
         </div>
       </div>
 
@@ -221,7 +233,7 @@ export default function Navbar({ missionNavItems, programNavItems, projectNavIte
       {open && (
         <div className="xl:hidden border-t border-gray-100 bg-white px-4 pb-4 shadow-sm">
           <nav className="flex flex-col gap-1 mt-2">
-            <Link href="/about" onClick={() => setOpen(false)} className="py-2 text-sm font-medium text-gray-700 hover:text-[#1a4731] transition-colors">
+            <Link href="/about" onClick={() => setOpen(false)} className={`py-2 ${navLinkClass(isActive("/about"))}`}>
               Who We Are
             </Link>
 
@@ -230,7 +242,7 @@ export default function Navbar({ missionNavItems, programNavItems, projectNavIte
             {/* Preaching */}
             <p className="text-[10px] uppercase tracking-widest text-gray-400 font-semibold mt-2 mb-1 px-1">Preaching</p>
             {preachingLinks.map((l) => (
-              <Link key={l.href} href={l.href} onClick={() => setOpen(false)} className="py-2 pl-3 text-sm font-medium text-gray-700 hover:text-[#1a4731] transition-colors">
+              <Link key={l.href} href={l.href} onClick={() => setOpen(false)} className={`py-2 pl-3 block ${navLinkClass(isActive(l.href))}`}>
                 {l.label}
               </Link>
             ))}
@@ -298,7 +310,7 @@ export default function Navbar({ missionNavItems, programNavItems, projectNavIte
 
             <div className="border-t border-gray-100 mt-2 pt-2" />
             {links.map((l) => (
-              <Link key={l.href} href={l.href} onClick={() => setOpen(false)} className="py-2 text-sm font-medium text-gray-700 hover:text-[#1a4731] transition-colors">
+              <Link key={l.href} href={l.href} onClick={() => setOpen(false)} className={`py-2 block ${navLinkClass(isActive(l.href))}`}>
                 {l.label}
               </Link>
             ))}
