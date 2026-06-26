@@ -43,6 +43,7 @@ export default function Footer() {
                 { href: "/locations", label: "Locations" },
                 { href: "/give", label: "Give" },
                 { href: "/blog", label: "News" },
+                { href: "/share-your-story", label: "Share Your Story" },
                 { href: "/contact", label: "Contact" },
               ].map((l) => (
                 <li key={l.href}>
