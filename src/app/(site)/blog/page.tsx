@@ -41,7 +41,7 @@ const FALLBACK_POSTS: Post[] = [
     _id: "2",
     slug: { current: "carascal-missions-update" },
     category: "Missions",
-    title: "Missions Update: New Believers in Carascal, Surigao del Sur",
+    title: "Missions Update: New Believers in Carrascal, Surigao del Sur",
     excerpt:
       "Praise God — our missionary team reports 12 new believers baptised in Barangay Gamuton over the past quarter. The church plant continues to grow.",
     publishedAt: "2025-04-28",

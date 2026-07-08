@@ -230,7 +230,7 @@ export default function ContactClient() {
                     "Cavite City — Sun 9:00 am",
                     "Imus, Cavite — Sun 10:00 am",
                     "Dasmariñas — Sun 9:00 am",
-                    "Carascal, Surigao del Sur — Sun 8:00 am",
+                    "Carrascal, Surigao del Sur — Sun 8:00 am",
                   ].map((loc) => (
                     <li key={loc} className="flex items-center gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-[#52b788] shrink-0" />
