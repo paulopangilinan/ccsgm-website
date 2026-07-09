@@ -60,6 +60,18 @@ export const locationsPageType = defineType({
               validation: (r) => r.required(),
             }),
             defineField({
+              name: "facebookUrl",
+              title: "Facebook Page URL",
+              type: "url",
+              description: "Optional — Facebook page for this location.",
+            }),
+            defineField({
+              name: "youtubeUrl",
+              title: "YouTube Channel URL",
+              type: "url",
+              description: "Optional — YouTube channel or playlist for this location.",
+            }),
+            defineField({
               name: "image",
               title: "Photo",
               type: "image",

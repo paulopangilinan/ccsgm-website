@@ -6,6 +6,7 @@
 
 import {defineConfig} from 'sanity'
 import {structureTool} from 'sanity/structure'
+import {colorInput} from '@sanity/color-input'
 
 // Go to https://www.sanity.io/docs/api-versioning to learn how API versioning works
 const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || '88pu18r5'
@@ -40,7 +41,7 @@ export default defineConfig({
   scheduledDrafts: {
     enabled: false,
   },
-  plugins: [structureTool({structure})],
+  plugins: [structureTool({structure}), colorInput()],
   // The WP Migration tool calls this app's own /api/migrate/* routes, which
   // only exist when Studio is embedded in the Next.js app — not in the
   // standalone Studio deployed via `sanity deploy` (ccsgm.sanity.studio).
