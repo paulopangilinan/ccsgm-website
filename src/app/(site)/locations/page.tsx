@@ -88,6 +88,26 @@ export default async function LocationsPage() {
                         </a>
                       </li>
                     )}
+                    {loc.facebookUrl && (
+                      <li className="flex items-center gap-2 text-sm">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="#1877F2" className="shrink-0">
+                          <path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.41c0-3.025 1.791-4.697 4.533-4.697 1.312 0 2.686.236 2.686.236v2.97h-1.513c-1.491 0-1.956.93-1.956 1.886v2.268h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z"/>
+                        </svg>
+                        <a href={loc.facebookUrl} target="_blank" rel="noopener noreferrer" className="text-[#1877F2] hover:underline">
+                          {loc.name} Facebook Page
+                        </a>
+                      </li>
+                    )}
+                    {loc.youtubeUrl && (
+                      <li className="flex items-center gap-2 text-sm">
+                        <svg width="17" height="15" viewBox="0 0 24 17" fill="#FF0000" className="shrink-0">
+                          <path d="M23.495 2.656a3.016 3.016 0 0 0-2.122-2.136C19.505 0 12 0 12 0S4.495 0 2.627.52A3.016 3.016 0 0 0 .505 2.656 31.803 31.803 0 0 0 0 8.5a31.803 31.803 0 0 0 .505 5.844 3.016 3.016 0 0 0 2.122 2.136C4.495 17 12 17 12 17s7.505 0 9.373-.52a3.016 3.016 0 0 0 2.122-2.136A31.803 31.803 0 0 0 24 8.5a31.803 31.803 0 0 0-.505-5.844zM9.545 12.068V4.932L15.818 8.5l-6.273 3.568z"/>
+                        </svg>
+                        <a href={loc.youtubeUrl} target="_blank" rel="noopener noreferrer" className="text-[#FF0000] hover:underline">
+                          {loc.name} YouTube Channel
+                        </a>
+                      </li>
+                    )}
                   </ul>
                 </div>
 

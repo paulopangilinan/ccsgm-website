@@ -1,14 +1,38 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import Script from "next/script";
 import { MapPin, Phone, Mail, Clock } from "lucide-react";
 import HeroSection from "@/components/HeroSection";
+import type { ContactInfo } from "@/lib/contactPage";
+import type { ChurchEntry } from "@/lib/locationsPage";
+import { DEFAULT_LOCATIONS } from "@/lib/contactDefaults";
 
 const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 
-export default function ContactClient() {
+type Props = {
+  contactInfo?: ContactInfo;
+  // null = locationsPage document exists but has no churches (honour the empty state)
+  // undefined = fetch failed, use fallback
+  locations: ChurchEntry[] | null;
+};
+
+export default function ContactClient({ contactInfo, locations }: Props) {
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error" | "bot-check-failed">("idle");
+
+  const info = {
+    mainOfficeLabel: contactInfo?.mainOfficeLabel || "Main Office",
+    mainOfficeAddress: contactInfo?.mainOfficeAddress || "213 Don Pedro Subdivision, Kaingen, Kawit, Cavite",
+    phone: contactInfo?.phone || "(046) 472-9443",
+    email: contactInfo?.email || "ccsgm.kawit@gmail.com",
+    officeHours: contactInfo?.officeHours || "Monday – Friday, 9:00 am – 5:00 pm",
+  };
+
+  // locations === null means locationsPage exists but is empty — honour it.
+  // locations === undefined (shouldn't happen with prop type) falls to defaults.
+  const locationList: { name: string; schedule: string }[] =
+    locations !== null ? locations : DEFAULT_LOCATIONS.map((l) => ({ ...l }));
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -178,10 +202,8 @@ export default function ContactClient() {
                     <MapPin size={16} className="text-[#52b788]" />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-[#1a4731]">Main Office</p>
-                    <p className="text-sm text-gray-500">
-                      213 Don Pedro Subdivision, Kaingen, Kawit, Cavite
-                    </p>
+                    <p className="text-sm font-semibold text-[#1a4731]">{info.mainOfficeLabel}</p>
+                    <p className="text-sm text-gray-500">{info.mainOfficeAddress}</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
@@ -190,7 +212,7 @@ export default function ContactClient() {
                   </div>
                   <div>
                     <p className="text-sm font-semibold text-[#1a4731]">Phone</p>
-                    <p className="text-sm text-gray-500">(046) 472-9443</p>
+                    <p className="text-sm text-gray-500">{info.phone}</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
@@ -200,10 +222,10 @@ export default function ContactClient() {
                   <div>
                     <p className="text-sm font-semibold text-[#1a4731]">Email</p>
                     <a
-                      href="mailto:ccsgm.kawit@gmail.com"
+                      href={`mailto:${info.email}`}
                       className="text-sm text-[#52b788] hover:underline"
                     >
-                      ccsgm.kawit@gmail.com
+                      {info.email}
                     </a>
                   </div>
                 </div>
@@ -213,9 +235,7 @@ export default function ContactClient() {
                   </div>
                   <div>
                     <p className="text-sm font-semibold text-[#1a4731]">Office Hours</p>
-                    <p className="text-sm text-gray-500">
-                      Monday – Friday, 9:00 am – 5:00 pm
-                    </p>
+                    <p className="text-sm text-gray-500">{info.officeHours}</p>
                   </div>
                 </div>
               </div>
@@ -224,20 +244,22 @@ export default function ContactClient() {
                 <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-4">
                   All Locations
                 </p>
-                <ul className="space-y-3 text-sm text-gray-600">
-                  {[
-                    "Kawit, Cavite — Sun 7:30 am & 10:00 am",
-                    "Cavite City — Sun 9:00 am",
-                    "Imus, Cavite — Sun 10:00 am",
-                    "Dasmariñas — Sun 9:00 am",
-                    "Carrascal, Surigao del Sur — Sun 8:00 am",
-                  ].map((loc) => (
-                    <li key={loc} className="flex items-center gap-2">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#52b788] shrink-0" />
-                      {loc}
+                <ul className="space-y-3 text-sm text-gray-600 mb-4">
+                  {locationList.map((loc, i) => (
+                    <li key={"_key" in loc ? String((loc as ChurchEntry)._key) : i} className="flex items-start gap-2">
+                      <MapPin size={14} className="text-[#52b788] shrink-0 mt-0.5" />
+                      <span className="flex-1">
+                        {loc.name} — {loc.schedule}
+                      </span>
                     </li>
                   ))}
                 </ul>
+                <Link
+                  href="/locations"
+                  className="text-xs font-semibold text-[#52b788] hover:underline"
+                >
+                  See all locations →
+                </Link>
               </div>
             </div>
           </div>

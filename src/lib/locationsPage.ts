@@ -10,6 +10,8 @@ export type ChurchEntry = {
   phone?: string;
   email?: string;
   note?: string;
+  facebookUrl?: string;
+  youtubeUrl?: string;
   mapQuery: string;
   image?: SanityImage;
 };
