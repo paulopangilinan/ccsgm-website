@@ -4,6 +4,7 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { getNavItems } from "@/lib/taxonomy";
+import { GoogleAnalytics } from "@next/third-parties/google";
 
 export const revalidate = 60;
 
@@ -42,6 +43,9 @@ export default async function SiteLayout({
         <main className="flex-1">{children}</main>
         <Footer />
       </body>
+      {process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID && (
+        <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID} />
+      )}
     </html>
   );
 }
