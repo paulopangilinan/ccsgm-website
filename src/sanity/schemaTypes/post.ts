@@ -185,13 +185,29 @@ export const postType = defineType({
       hidden: ({ document }) => !document?.isVisitorSubmission,
       readOnly: true,
     }),
+    defineField({
+      name: "submissionSourceId",
+      title: "Source Record ID",
+      type: "string",
+      description: "The ccsgm-connect testimony this draft was synced from. Used to avoid creating duplicate drafts on retry.",
+      hidden: ({ document }) => !document?.isVisitorSubmission,
+      readOnly: true,
+    }),
   ],
   preview: {
-    select: { title: "title", media: "mainImage", isVisitorSubmission: "isVisitorSubmission", storyType: "submissionStoryType" },
-    prepare({ title, media, isVisitorSubmission, storyType }) {
+    select: {
+      title: "title",
+      media: "mainImage",
+      isVisitorSubmission: "isVisitorSubmission",
+      storyType: "submissionStoryType",
+      sourceId: "submissionSourceId",
+    },
+    prepare({ title, media, isVisitorSubmission, storyType, sourceId }) {
       return {
         title: isVisitorSubmission ? `📬 ${title}` : title,
-        subtitle: isVisitorSubmission ? `Visitor submission — ${storyType ?? "Story"}` : undefined,
+        subtitle: isVisitorSubmission
+          ? `Visitor submission — ${storyType ?? "Story"}${sourceId ? " (via CCSGM Connect)" : ""}`
+          : undefined,
         media,
       };
     },

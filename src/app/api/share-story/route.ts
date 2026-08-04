@@ -6,6 +6,7 @@ import { verifyTurnstile } from "@/lib/turnstile";
 import { escapeHtml } from "@/lib/escapeHtml";
 import { getYouTubeId } from "@/lib/youtubeId";
 import { proseMirrorToPortableText } from "@/lib/proseMirrorToPortableText";
+import { key, plainTextBlock, slugify } from "@/lib/portableText";
 
 export const maxDuration = 30;
 
@@ -33,28 +34,6 @@ const CATEGORY_BY_STORY_TYPE: Record<string, string> = {
 };
 
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024; // 8MB
-
-function key() {
-  return Math.random().toString(36).slice(2, 10);
-}
-
-function slugify(title: string) {
-  return title
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 60);
-}
-
-function plainTextBlock(text: string) {
-  return {
-    _type: "block" as const,
-    _key: key(),
-    style: "normal",
-    markDefs: [],
-    children: [{ _type: "span" as const, _key: key(), text, marks: [] }],
-  };
-}
 
 function videoBlock(url: string) {
   const youtubeId = getYouTubeId(url);
